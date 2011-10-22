@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app id="WebApp_ID" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+ <!-- 	<display-name>sample.dw.paper.lucene</display-name>    -->
+ <display-name>luceneTest</display-name>
+	
+	<servlet>
+		<servlet-name>SearchController</servlet-name>
+		<servlet-class>sample.dw.paper.lucene.servlet.SearchController</servlet-class>
+	</servlet>
+	
+	<servlet-mapping>
+		<servlet-name>SearchController</servlet-name>
+		<url-pattern>/SearchController</url-pattern>
+	</servlet-mapping>
+	
+	<servlet>
+		<servlet-name>ImageCodeMakerServlet</servlet-name>
+		<servlet-class>com.article.servlet.ImageCodeMakerServlet</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>QueryDB</servlet-name>
+		<servlet-class>com.article.servlet.QueryDBServlet</servlet-class>
+		<init-param>
+			<param-name>dbURL</param-name>
+			<param-value>jdbc:mysql://172.19.0.27:9652/test</param-value>
+		</init-param>
+		<init-param>
+			<param-name>driver</param-name>
+			<param-value>com.mysql.jdbc.Driver</param-value>
+		</init-param>
+		<init-param>
+			<param-name>username</param-name>
+			<param-value>dev</param-value>
+		</init-param>
+		<init-param>
+			<param-name>password</param-name>
+			<param-value></param-value>
+		</init-param>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>ImageCodeMakerServlet</servlet-name>
+		<url-pattern>/getImageCode</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>QueryDB</servlet-name>
+		<url-pattern>/queryDB</url-pattern>
+	</servlet-mapping>
+	
+	<!-- 初始化log4j begin -->
+	<servlet>
+      <servlet-name>log4j-init</servlet-name>
+      <servlet-class>com.log.InitLog4jServlet</servlet-class>
+       <init-param>
+        <param-name>propertyConfig</param-name>
+        <param-value>log4j.properties</param-value>
+       </init-param>
+        <load-on-startip>1</load-on-startip>
+    </servlet>
+    <!-- 初始化log4j end -->
+    
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.htm</welcome-file>
+		<welcome-file>index.jsp</welcome-file>
+		<welcome-file>default.html</welcome-file>
+		<welcome-file>default.htm</welcome-file>
+		<welcome-file>default.jsp</welcome-file>
+	</welcome-file-list>
+</web-app>
