@@ -54,7 +54,7 @@
         <param-name>propertyConfig</param-name>
         <param-value>log4j.properties</param-value>
        </init-param>
-        <load-on-startip>1</load-on-startip>
+        <load-on-startup>1</load-on-startup>
     </servlet>
     <!-- 初始化log4j end -->
     
