@@ -41,7 +41,7 @@ public class SearchManager {
     public SearchManager(String searchWord){
     	this.searchWord   =  searchWord;
     	this.indexManager =  new IndexManager();
-    	this.analyzer     =  new StandardAnalyzer(Version.LUCENE_31);
+    	this.analyzer     =  new StandardAnalyzer(Version.LUCENE_30);
     }
     
     /**
