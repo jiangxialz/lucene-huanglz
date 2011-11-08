@@ -42,7 +42,8 @@ public class IndexManager {
     	File[] htmls = dir.listFiles();
 //    	Directory fsDirectory = FSDirectory.getDirectory(indexDir, true);
     	Directory fsDirectory = new SimpleFSDirectory(new File(indexDir));  
-    	Analyzer  analyzer    = new StandardAnalyzer(Version.LUCENE_31);
+    	Analyzer  analyzer    = new StandardAnalyzer(Version.LUCENE_30);
+//    	Analyzer  analyzer    = new StandardAnalyzer(Version.LUCENE_31);
     	IndexWriter indexWriter = new IndexWriter(fsDirectory, analyzer, true, IndexWriter.MaxFieldLength.UNLIMITED);
     	for(int i = 0; i < htmls.length; i++){
     		String htmlPath = htmls[i].getAbsolutePath();
