@@ -3,10 +3,14 @@ package com.ue.data.search.indexer.lucene;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -27,12 +31,13 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.AttributeImpl;
-import org.apache.lucene.util.StringHelper;
 import org.apache.lucene.util.Version;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.common.confManager.ConfManager;
 import com.constants.IndexConstant;
+import com.search.po.ArticlePO;
+import com.search.po.DataGrid;
 import com.ue.data.search.IInderer;
 
 //import sun.security.krb5.Config;
@@ -41,6 +46,8 @@ public class Indexer implements IInderer
 {
 	 // 配置管理类实例
     private static ConfManager cm = ConfManager.getInstance();
+    
+    private static final String SETFLAG = "set";
 	
     IInderer m_indexer = null;
 
@@ -235,18 +242,18 @@ public class Indexer implements IInderer
      * @return
      * @throws Exception
      */
-//    public DataTable search(String strQueryString, int offset, int limit, String strSorts) throws Exception
-//    {
-//        Analyzer analyzer = new IKAnalyzer();
-//        StringReader reader = new StringReader(strQueryString);
-//        TokenStream ts = analyzer.tokenStream("*", reader);
-//        Iterator<AttributeImpl> it = ts.getAttributeImplsIterator();
-//        while (it.hasNext())
-//        {
-//            System.out.println((AttributeImpl) it.next());
-//        }
-//        return search(strQueryString, offset, limit, strSorts, null);
-//    }
+  public DataGrid<List> search(String strQueryString, int offset, int limit, String strSorts) throws Exception
+  {
+      Analyzer analyzer = new IKAnalyzer();
+      StringReader reader = new StringReader(strQueryString);
+      TokenStream ts = analyzer.tokenStream("*", reader);
+      Iterator<AttributeImpl> it = ts.getAttributeImplsIterator();
+      while (it.hasNext())
+      {
+          System.out.println((AttributeImpl) it.next());
+      }
+      return search(strQueryString, offset, limit, strSorts, null);
+  }
 
     /**
      * @param query
@@ -363,6 +370,116 @@ public class Indexer implements IInderer
 //        }
 //        return dt;
 //    }
+    
+    
+  public DataGrid<List> search(Query query, int offset, int limit, String strSorts)
+  {
+      // order by ID[STRING] asc,
+      Directory directory;
+//      DataTable dt = new DataTable("DataTable");
+      
+      List resultList = new ArrayList();
+      DataGrid<List> dataGrid =  new DataGrid<List>();
+      IndexSearcher searcher = null;
+      try
+      {
+          directory = getDirectory();
+          searcher = new IndexSearcher(directory, true);
+
+          Sort sort = new Sort();
+          if (StringUtils.isNotBlank(strSorts))
+          {
+              String[] sorts = strSorts.split(",");
+              SortField[] sortFields = new SortField[sorts.length + 1];
+              sortFields[sorts.length] = SortField.FIELD_DOC;
+              for (int i = 0; i < sorts.length; i++)
+              {
+                  int intSortType = SortField.STRING;
+                  String[] arr = sorts[i].split(" ");
+                  String strSortField = arr[0];
+                  int bPos = strSortField.indexOf('[');
+                  int ePos = strSortField.indexOf(']');
+                  if (bPos > 0 && ePos > bPos)
+                  {
+                      strSortField = arr[0].substring(0, bPos);
+                      String strSortType = arr[0].substring(bPos + 1, ePos);
+                      intSortType = getSortType(strSortType);
+                  }
+                  boolean bReverse = false;
+                  if (arr.length == 2 && "desc".equalsIgnoreCase(arr[1]))
+                  {
+                      bReverse = true;
+                  }
+                  sortFields[i] = new SortField(strSortField, intSortType, bReverse);
+              }
+              sort.setSort(sortFields);
+          }
+          if (query == null)
+              query = new MatchAllDocsQuery();
+          TopDocs topDocs = searcher.search(query, null, limit, sort);
+          dataGrid.setTotalElements(topDocs.totalHits);
+          ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+          // System.out.print("记录条数:"+scoreDocs.length);
+//          ResultSet rs = null;
+          
+        Class clazzT = ArticlePO.class;  
+  	    Method[] methods = clazzT.getMethods();//获得bean的方法      
+  	    List<Method> setterMethodList = new ArrayList<Method>();//构造一个List用来存放bean中所有set开头的方法      
+  	  
+  	    //获得Bean中所有set方法      
+  	    for (Method method : methods) {  
+  	        if (method.getName().startsWith(SETFLAG)) {  
+  	            setterMethodList.add(method);  
+  	        }  
+  	    }  
+          
+          if (scoreDocs.length > 0)
+          {
+              Document document = searcher.doc(scoreDocs[0].doc);
+              for (int i = offset; i < scoreDocs.length; i++)
+              {
+                  document = searcher.doc(scoreDocs[i].doc);
+                  ArticlePO articlePO = (ArticlePO)clazzT.newInstance();  
+                  for (Fieldable fieldable : document.getFields())
+                  {
+                      String strField = fieldable.name();
+                      String strValue = document.get(strField);
+                      for (Method method : setterMethodList) 
+                      {  
+                    	// 得到set开头方法字符串对应的字段值，如setName,转变后Name  
+                    	if (method.getName().substring(SETFLAG.length()).equalsIgnoreCase(strField)) 
+                    	{
+                    		method.invoke(articlePO, strValue);  
+                    		break;
+						}  
+      	              }  
+                  }
+                  resultList.add(articlePO);
+              }
+          }
+
+      }
+      catch (Exception e)
+      {
+          e.printStackTrace();
+      }
+      finally
+      {
+          if (searcher != null)
+          {
+              try
+              {
+                  searcher.close();
+              }
+              catch (IOException e)
+              {
+                  e.printStackTrace();
+              }
+          }
+      }
+      dataGrid.setData(resultList);
+      return dataGrid;
+  }
 
     private int getSortType(String strSortType)
     {
@@ -400,24 +517,26 @@ public class Indexer implements IInderer
      * @exception throws [违例类型] [违例说明]
      * @see [类、类#方法、类#成员]
      */
-//    public DataTable search(String strQueryString, int offset, int limit, String strSorts, Analyzer analyzer)
-//            throws Exception
-//    {
-//        if (analyzer == null)
-//            analyzer = new StandardAnalyzer(Version.LUCENE_CURRENT);
-//        QueryParser queryParser = new QueryParser(Version.LUCENE_CURRENT, "", analyzer);
-//        queryParser.setAllowLeadingWildcard(true);// 设为true，允许使用通配符
-//        queryParser.setEnablePositionIncrements(false);// 设为true，以便在查询结果的立场增量
-//        queryParser.setLowercaseExpandedTerms(false);
-//        Query query = null;
-//        if (StringHelper.isNotNullAndEmpty(strQueryString))
-//        {
-//            queryParser.setDefaultOperator(QueryParser.OR_OPERATOR);// 设置的QueryParser的布尔运算符。
-//            query = queryParser.parse(strQueryString);
-//        }
-//
-//        return search(query, offset, limit, strSorts);
-//    }
+    
+	  public DataGrid<List> search(String strQueryString, int offset, int limit, String strSorts, Analyzer analyzer)
+	  throws Exception
+	  {
+			if (analyzer == null)
+			  analyzer = new StandardAnalyzer(Version.LUCENE_CURRENT);
+			QueryParser queryParser = new QueryParser(Version.LUCENE_CURRENT, "", analyzer);
+			queryParser.setAllowLeadingWildcard(true);// 设为true，允许使用通配符
+			queryParser.setEnablePositionIncrements(false);// 设为true，以便在查询结果的立场增量
+			queryParser.setLowercaseExpandedTerms(false);
+			Query query = null;
+			if (StringUtils.isNotBlank(strQueryString))
+			{
+			  queryParser.setDefaultOperator(QueryParser.OR_OPERATOR);// 设置的QueryParser的布尔运算符。
+			  query = queryParser.parse(strQueryString);
+			}
+		
+			return search(query, offset, limit, strSorts);
+	 }
+    
 //
 //    public DataTable search(String strSQL, String strQueryString, int offset, int limit, String strOrders)
 //            throws Exception
