@@ -118,11 +118,14 @@ public class ArticleInfoIndex
 				while (rs.next())
 				{
 					HashMap<String, Object> map = new HashMap<String, Object>();
+					// 索引字段必须与javaBean中的字段要一样，可不区分大小写
 					map.put("ID", rs.getString("id"));
 					map.put("title", rs.getString("title"));
 					map.put("content", rs.getObject("content"));
 					map.put("author", rs.getString("author"));
 					map.put("create_time", rs.getString("create_time"));
+					String[] teStrings = rs.getString("create_time").split(" ");
+					map.put("intCreateTime", teStrings[0].replaceAll("-", ""));
 					map.put("update_time", rs.getString("update_time"));
 					
 					if (rs.getInt("addORupdate") == 1) {
@@ -162,7 +165,7 @@ public class ArticleInfoIndex
         ResultSet index_log_rs = sm.executeQuery(index_log_sql);
         String index_log_updateTime = "0";
         while (index_log_rs.next()) {
-        	index_log_updateTime  = (String) index_log_rs.getObject("updateTime");
+        	index_log_updateTime  = (String) index_log_rs.getObject("update_time");
 		}
 		return index_log_updateTime;
     }
