@@ -19,11 +19,9 @@ public class ArticleInfoSearchService
 	  // 配置管理类实例
     private static ConfManager cm = ConfManager.getInstance();
 
-	@SuppressWarnings("rawtypes")
-	public static DataGrid<List> getData(SearchBasePO sbpo)
+	public static <T> DataGrid<List<T>> getData(T object, SearchBasePO sbpo)
 	{
-		List list = new ArrayList();
-		DataGrid<List> dataGrid = new DataGrid<List>();
+		DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
 		String strWhere = sbpo.getParamStr();
         if (StringUtils.isBlank(strWhere))
         {
@@ -34,7 +32,7 @@ public class ArticleInfoSearchService
         
         try
         {
-        	dataGrid = indexer.search(strWhere, sbpo.getOffset(), sbpo.getOffset() + sbpo.getLimit(), sbpo.getOrder_str());
+        	dataGrid = indexer.search(object, strWhere, sbpo.getOffset(), sbpo.getOffset() + sbpo.getLimit(), sbpo.getOrder_str());
         }
         catch (Exception e)
         {
@@ -44,7 +42,72 @@ public class ArticleInfoSearchService
 		return dataGrid;
 	}
 	
-	public static DataGrid<List> getDataKeyAnalysis(SearchBasePO sbpo)
+	public static <T> DataGrid<List<T>> getDataKeyAnalysis(T object, SearchBasePO sbpo)
+	{
+		List<T> resultList = new ArrayList<T>();
+		// 防止重复
+        ArrayList<String> ids = new ArrayList<String>();
+		DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
+		 // 建立搜索条件
+        ArrayList<String> words = KeyAnalysisSupport.analysePostSearchKey(sbpo);
+        // 总记录数
+        int lngRowCount = 0;
+        Indexer indexer = new Indexer(cm.getPropValue(IndexConstant.NEWS_PATH), null);
+        
+        try
+        {
+            // 搜索各分词结果
+            for (String word : words)
+            {
+                LogHelper.getLogger().info("sbWhere=======  " + word);
+                dataGrid = indexer.search(object, word, sbpo.getOffset(), sbpo.getOffset() + sbpo.getLimit(), sbpo.getOrder_str());
+
+//                if (dataGrid.getTotalElements()<=0) 
+//                {
+//                	DataGrid<List<T>> dataGrid_2 =  indexer.search(object, word, 0, 1, null);
+//					dataGrid.setTotalElements(dataGrid_2.getTotalElements());
+//				}
+                if (dataGrid.getData().size() > 0)
+                {
+                    sbpo.setOffset(0);
+                    for (int i = 0; sbpo.getLimit() - ids.size() > 0 && i < dataGrid.getData().size(); i++)
+                    {
+                    	object = (T) dataGrid.getData().get(i);
+                    	resultList.add(object);
+//                    	String strID = ((T) object).getId();
+////                    	String strID = dt.getRow(i).getString("ID");
+//                        if (!ids.contains(strID))
+//                        {   // 判断重复
+//                        	resultList.add(object);
+//                            ids.add(strID);
+//                        }
+//                        else
+//                        {
+//                            lngRowCount--;
+//                        }
+                    }
+                }
+                else
+                {
+                    sbpo.setOffset(sbpo.getOffset() - dataGrid.getTotalElements());
+                    if (sbpo.getOffset() < 0)
+                        sbpo.setOffset(0);
+                }
+                // 总记录
+                lngRowCount += dataGrid.getTotalElements();
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        dataGrid.setData(resultList);
+        dataGrid.setTotalElements(lngRowCount);
+        return dataGrid;
+	}
+	
+	/**
+	public static <T> DataGrid<List> getDataKeyAnalysis3(T object, SearchBasePO sbpo)
 	{
 		List<ArticlePO> resultList = new ArrayList<ArticlePO>();
 		// 防止重复
@@ -107,6 +170,7 @@ public class ArticleInfoSearchService
         dataGrid.setTotalElements(lngRowCount);
         return dataGrid;
 	}
+	*/
 	
 	// 调试
 	public static void main(String[] args)
@@ -116,15 +180,17 @@ public class ArticleInfoSearchService
         sbpo.setParam("type", "title");
 //        sbpo.setParamStr("postName : 工程师");
 //        sbpo.setParamStr("title:软件开发工程师");
-        sbpo.setOrder_str("create_time asc");
-//        DataGrid<List> dataGrid = getData(sbpo);
-        DataGrid<List> dataGrid = getDataKeyAnalysis(sbpo);
+        sbpo.setOrder_str("intCreateTime desc");
+        ArticlePO article = new ArticlePO();
+//        DataGrid<List<ArticlePO>> dataGrid = getData(article, sbpo);
+        DataGrid<List<ArticlePO>> dataGrid = getDataKeyAnalysis(article,sbpo);
+        System.out.println(dataGrid.getTotalElements());
         if (null !=dataGrid && dataGrid.getTotalElements() > 0) 
         {
         	List<ArticlePO> list = (List<ArticlePO>)dataGrid.getData();
 	        for (ArticlePO articlePO : list) 
 	        {
-				System.out.println("id : "+ articlePO.getId()+ " title :"+articlePO.getTitle()+ "  create_time : " + articlePO.getCreate_time());
+				System.out.println("id : "+ articlePO.getId()+ " title :"+articlePO.getTitle()+ "  intCreateTime : " + articlePO.getIntCreateTime());
 			}
         }
 	}
