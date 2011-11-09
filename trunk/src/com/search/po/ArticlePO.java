@@ -7,6 +7,13 @@ public class ArticlePO
 	private String content;
 	private String author;
 	private String create_time;
+	private String intCreateTime;
+	public String getIntCreateTime() {
+		return intCreateTime;
+	}
+	public void setIntCreateTime(String intCreateTime) {
+		this.intCreateTime = intCreateTime;
+	}
 	private String update_time;
 	
 
