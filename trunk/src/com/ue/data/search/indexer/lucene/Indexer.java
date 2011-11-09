@@ -1,5 +1,7 @@
 package com.ue.data.search.indexer.lucene;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -36,11 +38,8 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.common.confManager.ConfManager;
 import com.constants.IndexConstant;
-import com.search.po.ArticlePO;
 import com.search.po.DataGrid;
 import com.ue.data.search.IInderer;
-
-//import sun.security.krb5.Config;
 
 public class Indexer implements IInderer
 {
@@ -82,8 +81,6 @@ public class Indexer implements IInderer
     }
 
     /*
-     * (non-Javadoc)
-     * 
      * @see com.ue.data.search.IIndexer#close()
      */
     public void close() throws IOException
@@ -92,7 +89,8 @@ public class Indexer implements IInderer
         {
             try
             {
-                m_indexWriter.close(); // 关闭IndexWriter时,才把内存中的数据写到文件
+            	// 关闭IndexWriter时,才把内存中的数据写到文件
+                m_indexWriter.close(); 
             }
             catch (IOException e)
             {
@@ -113,8 +111,6 @@ public class Indexer implements IInderer
     }
 
     /*
-     * (non-Javadoc)
-     * 
      * @see com.ue.data.search.IIndexer#open(java.lang.String, boolean)
      */
     public void open(String strPath, boolean bCreate) throws Exception
@@ -172,8 +168,6 @@ public class Indexer implements IInderer
             }
         }
         m_indexWriter.addDocument(document);
-        // m_indexWriter.optimize();
-        // m_indexWriter.commit();
         return true;
     }
 
@@ -188,8 +182,6 @@ public class Indexer implements IInderer
     }
 
     /*
-     * (non-Javadoc)
-     * 
      * @see com.ue.data.search.IIndexer#remove(java.lang.String)
      */
     public boolean remove(String strID) throws Exception
@@ -202,8 +194,6 @@ public class Indexer implements IInderer
     }
 
     /*
-     * (non-Javadoc)
-     * 
      * @see com.ue.data.search.IIndexer#removeAll()
      */
     public boolean removeAll()
@@ -212,8 +202,7 @@ public class Indexer implements IInderer
     }
 
     /*
-     * (non-Javadoc) 更新索引文件
-     * 
+     * 更新索引文件
      * @see com.ue.data.search.IIndexer#update(java.lang.String,
      * java.util.HashMap)
      */
@@ -242,7 +231,7 @@ public class Indexer implements IInderer
      * @return
      * @throws Exception
      */
-  public DataGrid<List> search(String strQueryString, int offset, int limit, String strSorts) throws Exception
+  public <T> DataGrid<List<T>> search(T object, String strQueryString, int offset, int limit, String strSorts) throws Exception
   {
       Analyzer analyzer = new IKAnalyzer();
       StringReader reader = new StringReader(strQueryString);
@@ -252,212 +241,61 @@ public class Indexer implements IInderer
       {
           System.out.println((AttributeImpl) it.next());
       }
-      return search(strQueryString, offset, limit, strSorts, null);
+      return search(object, strQueryString, offset, limit, strSorts, null);
   }
 
-    /**
-     * @param query
-     * @param offset
-     * @param limit
-     * @param strSorts
-     * @return
-     * @throws Exception [参数说明]
-     * 
-     * @return DataTable [返回类型说明]
-     * @exception throws [违例类型] [违例说明]
-     * @see [类、类#方法、类#成员]
-     */
-//    public DataTable search(Query query, int offset, int limit, String strSorts)
-//    {
-//        // order by ID[STRING] asc,
-//        Directory directory;
-//        DataTable dt = new DataTable("DataTable");
-//        IndexSearcher searcher = null;
-//        try
-//        {
-//            directory = getDirectory();
-//            searcher = new IndexSearcher(directory, true);
-//
-//            Sort sort = new Sort();
-//            if (StringHelper.isNotNullAndEmpty(strSorts))
-//            {
-//                String[] sorts = strSorts.split(",");
-//                SortField[] sortFields = new SortField[sorts.length + 1];
-//                sortFields[sorts.length] = SortField.FIELD_DOC;
-//                for (int i = 0; i < sorts.length; i++)
-//                {
-//                    int intSortType = SortField.STRING;
-//                    String[] arr = sorts[i].split(" ");
-//                    String strSortField = arr[0];
-//                    int bPos = strSortField.indexOf('[');
-//                    int ePos = strSortField.indexOf(']');
-//                    if (bPos > 0 && ePos > bPos)
-//                    {
-//                        strSortField = arr[0].substring(0, bPos);
-//                        String strSortType = arr[0].substring(bPos + 1, ePos);
-//                        intSortType = getSortType(strSortType);
-//                    }
-//                    boolean bReverse = false;
-//                    if (arr.length == 2 && "desc".equalsIgnoreCase(arr[1]))
-//                    {
-//                        bReverse = true;
-//                    }
-//                    sortFields[i] = new SortField(strSortField, intSortType, bReverse);
-//                }
-//                sort.setSort(sortFields);
-//            }
-//            /*
-//             * topScoreDocCollector results =
-//             * TopScoreDocCollector.create(limit,true); searcher.search(query,
-//             * results); TopDocs topDocs = results.topDocs(offset,limit);
-//             */
-//            // q = q.rewrite(is.getIndexReader());
-//            // is.setSimilarity(new DefaultSimilarity());//Expert: Set the
-//            // Similarity implementation used by this Searcher.
-//            // AccessibleTopHitCollector collector = new
-//            // AccessibleTopHitCollector(1000, true, true);
-//            if (query == null)
-//                query = new MatchAllDocsQuery();
-//            TopDocs topDocs = searcher.search(query, null, limit, sort);
-//            dt.setTotalRecords(topDocs.totalHits);
-//            ScoreDoc[] scoreDocs = topDocs.scoreDocs;
-//            // System.out.print("记录条数:"+scoreDocs.length);
-//            if (scoreDocs.length > 0)
-//            {
-//                Document document = searcher.doc(scoreDocs[0].doc);
-//                for (Fieldable fieldable : document.getFields())
-//                {
-//                    String strField = fieldable.name();
-//                    if (!dt.getColumns().containsKey(strField))
-//                    {
-//                        dt.getColumns().add(strField);
-//                    }
-//                }
-//                for (int i = offset; i < scoreDocs.length; i++)
-//                {
-//                    document = searcher.doc(scoreDocs[i].doc);
-//                    DataRow row = dt.newRow();
-//                    for (Fieldable fieldable : document.getFields())
-//                    {
-//                        String strField = fieldable.name();
-//                        String strValue = document.get(strField);
-//                        row.set(strField, strValue);
-//                        // System.out.println(strField + ":" + strValue);
-//                    }
-//                    dt.addRow(row);
-//                }
-//            }
-//
-//        }
-//        catch (Exception e)
-//        {
-//            e.printStackTrace();
-//        }
-//        finally
-//        {
-//            if (searcher != null)
-//            {
-//                try
-//                {
-//                    searcher.close();
-//                }
-//                catch (IOException e)
-//                {
-//                    e.printStackTrace();
-//                }
-//            }
-//
-//        }
-//        return dt;
-//    }
-    
-    
-  public DataGrid<List> search(Query query, int offset, int limit, String strSorts)
+  /**
+   * 调用搜索方法返回搜索结果并对结果进行处理
+   * @param <T>
+   * @param object
+   * @param query
+   * @param offset
+   * @param limit
+   * @param strSorts
+   * @return
+   */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  public <T> DataGrid<List<T>> search(T object, Query query, int offset, int limit, String strSorts)
   {
-      // order by ID[STRING] asc,
-      Directory directory;
-//      DataTable dt = new DataTable("DataTable");
-      
-      List resultList = new ArrayList();
-      DataGrid<List> dataGrid =  new DataGrid<List>();
+      List<T> resultList = new ArrayList<T>();
+      DataGrid<List<T>> dataGrid =  new DataGrid<List<T>>();
       IndexSearcher searcher = null;
       try
       {
-          directory = getDirectory();
+    	  Directory directory = getDirectory();
           searcher = new IndexSearcher(directory, true);
-
-          Sort sort = new Sort();
-          if (StringUtils.isNotBlank(strSorts))
-          {
-              String[] sorts = strSorts.split(",");
-              SortField[] sortFields = new SortField[sorts.length + 1];
-              sortFields[sorts.length] = SortField.FIELD_DOC;
-              for (int i = 0; i < sorts.length; i++)
-              {
-                  int intSortType = SortField.STRING;
-                  String[] arr = sorts[i].split(" ");
-                  String strSortField = arr[0];
-                  int bPos = strSortField.indexOf('[');
-                  int ePos = strSortField.indexOf(']');
-                  if (bPos > 0 && ePos > bPos)
-                  {
-                      strSortField = arr[0].substring(0, bPos);
-                      String strSortType = arr[0].substring(bPos + 1, ePos);
-                      intSortType = getSortType(strSortType);
-                  }
-                  boolean bReverse = false;
-                  if (arr.length == 2 && "desc".equalsIgnoreCase(arr[1]))
-                  {
-                      bReverse = true;
-                  }
-                  sortFields[i] = new SortField(strSortField, intSortType, bReverse);
-              }
-              sort.setSort(sortFields);
-          }
+          // 给定义的字段设置排序
+          Sort sort = getFieldsSort(strSorts);
           if (query == null)
               query = new MatchAllDocsQuery();
-          TopDocs topDocs = searcher.search(query, null, limit, sort);
-          dataGrid.setTotalElements(topDocs.totalHits);
-          ScoreDoc[] scoreDocs = topDocs.scoreDocs;
-          // System.out.print("记录条数:"+scoreDocs.length);
-//          ResultSet rs = null;
-          
-        Class clazzT = ArticlePO.class;  
-  	    Method[] methods = clazzT.getMethods();//获得bean的方法      
-  	    List<Method> setterMethodList = new ArrayList<Method>();//构造一个List用来存放bean中所有set开头的方法      
-  	  
-  	    //获得Bean中所有set方法      
-  	    for (Method method : methods) {  
-  	        if (method.getName().startsWith(SETFLAG)) {  
-  	            setterMethodList.add(method);  
-  	        }  
-  	    }  
-          
-          if (scoreDocs.length > 0)
-          {
-              Document document = searcher.doc(scoreDocs[0].doc);
-              for (int i = offset; i < scoreDocs.length; i++)
-              {
-                  document = searcher.doc(scoreDocs[i].doc);
-                  ArticlePO articlePO = (ArticlePO)clazzT.newInstance();  
-                  for (Fieldable fieldable : document.getFields())
-                  {
-                      String strField = fieldable.name();
-                      String strValue = document.get(strField);
-                      for (Method method : setterMethodList) 
-                      {  
-                    	// 得到set开头方法字符串对应的字段值，如setName,转变后Name  
-                    	if (method.getName().substring(SETFLAG.length()).equalsIgnoreCase(strField)) 
-                    	{
-                    		method.invoke(articlePO, strValue);  
-                    		break;
-						}  
-      	              }  
-                  }
-                  resultList.add(articlePO);
-              }
-          }
-
+	          TopDocs topDocs = searcher.search(query, null, limit, sort);
+	          dataGrid.setTotalElements(topDocs.totalHits);
+	          ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+	          Class clazzT = object.getClass();
+	          if (scoreDocs.length > 0)
+	          {
+	              Document document = searcher.doc(scoreDocs[0].doc);
+	              for (int i = offset; i < scoreDocs.length; i++)
+	              {
+	                  document = searcher.doc(scoreDocs[i].doc);
+	                  T o = (T)clazzT.newInstance();  
+	                  for (Fieldable fieldable : document.getFields())
+	                  {
+	                      String strField = fieldable.name();
+	                      String strValue = document.get(strField);
+	                      for (Method method : getSetterMethodList(clazzT)) 
+	                      {  
+	                    	// 得到set开头方法字符串对应的字段值，如setName,转变后Name  
+	                    	if (method.getName().substring(SETFLAG.length()).equalsIgnoreCase(strField)) 
+	                    	{
+	                    		method.invoke(o, strValue);  
+	                    		break;
+							}  
+	      	              }  
+	                  }
+	                  resultList.add(o);
+	              }
+	          }
       }
       catch (Exception e)
       {
@@ -480,7 +318,44 @@ public class Indexer implements IInderer
       dataGrid.setData(resultList);
       return dataGrid;
   }
-
+  
+  /**
+   * 给定义的字段排序
+   * @param strSorts
+   */
+  private Sort getFieldsSort(String strSorts)
+  {
+	  Sort sort = new Sort();
+      if (StringUtils.isNotBlank(strSorts))
+      {
+          String[] sorts = strSorts.split(",");
+          SortField[] sortFields = new SortField[sorts.length + 1];
+          sortFields[sorts.length] = SortField.FIELD_DOC;
+          for (int i = 0; i < sorts.length; i++)
+          {
+              int intSortType = SortField.STRING;
+              String[] arr = sorts[i].split(" ");
+              String strSortField = arr[0];
+              int bPos = strSortField.indexOf('[');
+              int ePos = strSortField.indexOf(']');
+              if (bPos > 0 && ePos > bPos)
+              {
+                  strSortField = arr[0].substring(0, bPos);
+                  String strSortType = arr[0].substring(bPos + 1, ePos);
+                  intSortType = getSortType(strSortType);
+              }
+              boolean bReverse = false;
+              if (arr.length == 2 && "desc".equalsIgnoreCase(arr[1]))
+              {
+                  bReverse = true;
+              }
+              sortFields[i] = new SortField(strSortField, intSortType, bReverse);
+          }
+          sort.setSort(sortFields);
+      }
+      return sort;
+  }
+  
     private int getSortType(String strSortType)
     {
         if ("BYTE".equalsIgnoreCase(strSortType))
@@ -502,6 +377,44 @@ public class Indexer implements IInderer
         else
             return SortField.STRING;
     }
+    
+    /**
+     * 获取bean中所有setter方法
+     * @param clazz
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+	private List<Method> getSetterMethodList(Class clazz)
+    {
+    	Class clazzT = clazz;  
+  	    Method[] methods = clazzT.getMethods();//获得bean的方法      
+  	    List<Method> setterMethodList = new ArrayList<Method>();//构造一个List用来存放bean中所有set开头的方法      
+  	  
+  	    //获得Bean中所有set方法      
+  	    for (Method method : methods) {  
+  	        if (method.getName().startsWith(SETFLAG)) {  
+  	            setterMethodList.add(method);  
+  	        }  
+  	    }  
+  	    return setterMethodList;
+    }
+    
+    /**
+     * 获取字段的类型
+     * @param propertyName
+     * @param clazz
+     * @return
+     * @throws IntrospectionException
+     */
+    @SuppressWarnings({ "rawtypes", "unused" })
+	public static Class findPropertyType(String propertyName, Class clazz) throws IntrospectionException
+	{
+	   PropertyDescriptor pd = new PropertyDescriptor(propertyName, clazz);
+	   if (pd != null)
+	     return pd.getPropertyType();
+	   else
+	     return Object.class;
+	 }
 
     /**
      * <搜索处理方法>
@@ -518,7 +431,7 @@ public class Indexer implements IInderer
      * @see [类、类#方法、类#成员]
      */
     
-	  public DataGrid<List> search(String strQueryString, int offset, int limit, String strSorts, Analyzer analyzer)
+	  public <T> DataGrid<List<T>> search(T object, String strQueryString, int offset, int limit, String strSorts, Analyzer analyzer)
 	  throws Exception
 	  {
 			if (analyzer == null)
@@ -533,25 +446,25 @@ public class Indexer implements IInderer
 			  queryParser.setDefaultOperator(QueryParser.OR_OPERATOR);// 设置的QueryParser的布尔运算符。
 			  query = queryParser.parse(strQueryString);
 			}
-		
-			return search(query, offset, limit, strSorts);
+			return search(object, query, offset, limit, strSorts);
 	 }
     
-//
-//    public DataTable search(String strSQL, String strQueryString, int offset, int limit, String strOrders)
-//            throws Exception
-//    {
-//        DataTable dt_1 = search(strQueryString, offset, limit, strOrders);
-//        String strIDs = "";
-//        for (DataRow row : dt_1.getRows())
-//        {
-//            strIDs = StringHelper.linkString(strIDs, ",", row.getString("ID"));
-//        }
-//        if (strSQL.indexOf("?ID") > 0)
-//            strSQL = strSQL.replace("?ID", strIDs);
-//        else
-//            strSQL += " where ID in (" + strIDs + ")";
-//        return DBManager.getDataTable(strSQL);
-//    }
-
+/**
+    public DataTable search(String strSQL, String strQueryString, int offset, int limit, String strOrders)
+            throws Exception
+    {
+        DataTable dt_1 = search(strQueryString, offset, limit, strOrders);
+        String strIDs = "";
+        for (DataRow row : dt_1.getRows())
+        {
+            strIDs = StringHelper.linkString(strIDs, ",", row.getString("ID"));
+        }
+        if (strSQL.indexOf("?ID") > 0)
+            strSQL = strSQL.replace("?ID", strIDs);
+        else
+            strSQL += " where ID in (" + strIDs + ")";
+        return DBManager.getDataTable(strSQL);
+    }
+*/
+	  
 }
