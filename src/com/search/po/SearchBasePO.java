@@ -17,6 +17,10 @@ public class SearchBasePO implements Serializable
 
     /** 解析后的查询条件 */
     private String paramStr;
+    /** 当前请求页 */
+    int curPage = 1;
+    /** 每页记录数 */
+    int pageSize = 10;
 
     /** 起始记录数 */
     int offset = 0;
@@ -24,7 +28,23 @@ public class SearchBasePO implements Serializable
     /** 截止记录数 */
     int limit = 15;
 
-    /** 是否应用权重 */
+    public int getCurPage() {
+		return curPage;
+	}
+
+	public void setCurPage(int curPage) {
+		this.curPage = curPage;
+	}
+
+	public int getPageSize() {
+		return pageSize;
+	}
+
+	public void setPageSize(int pageSize) {
+		this.pageSize = pageSize;
+	}
+
+	/** 是否应用权重 */
     boolean isBoost;
 
     /** 排序规则 */
