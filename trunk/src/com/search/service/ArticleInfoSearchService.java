@@ -13,6 +13,8 @@ import com.search.po.SearchBasePO;
 import com.search.support.KeyAnalysisSupport;
 import com.ue.data.search.indexer.lucene.Indexer;
 import com.util.LogHelper;
+import com.util.page.PageableResultData;
+import com.util.page.PageableResultDataImpl;
 
 public class ArticleInfoSearchService 
 {
@@ -20,6 +22,32 @@ public class ArticleInfoSearchService
     private static ConfManager cm = ConfManager.getInstance();
 
 	public static <T> DataGrid<List<T>> getData(T object, SearchBasePO sbpo)
+	{
+		DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
+		String strWhere = sbpo.getParamStr();
+        if (StringUtils.isBlank(strWhere))
+        {
+            return dataGrid;
+        }
+        // 先判断sbpo中的参数map!=null
+        Indexer indexer = new Indexer(cm.getPropValue(IndexConstant.NEWS_PATH), null);
+        
+        int offset = (sbpo.getCurPage()-1)*sbpo.getPageSize();
+//        int offset = PageableResultDataImpl
+        
+        try
+        {
+        	dataGrid = indexer.search(object, strWhere, offset, sbpo.getPageSize(), sbpo.getOrder_str());
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+		return dataGrid;
+	}
+	
+	public static <T> DataGrid<List<T>> getData2(T object, SearchBasePO sbpo)
 	{
 		DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
 		String strWhere = sbpo.getParamStr();
@@ -176,14 +204,21 @@ public class ArticleInfoSearchService
 	public static void main(String[] args)
 	{
 		SearchBasePO sbpo = new SearchBasePO();
-		sbpo.setParam("key", "软件开发工程师");
-        sbpo.setParam("type", "title");
-//        sbpo.setParamStr("postName : 工程师");
-//        sbpo.setParamStr("title:软件开发工程师");
+//		sbpo.setParam("key", "软件开发工程师");
+//        sbpo.setParam("type", "title");
+		sbpo.setOffset(1);
+        sbpo.setParamStr("content:输入");
         sbpo.setOrder_str("intCreateTime desc");
         ArticlePO article = new ArticlePO();
+        DataGrid<List<ArticlePO>> dataGrid = getData(article, sbpo);
+        try {
+			PageableResultData pageableResultData = (PageableResultData) new PageableResultDataImpl(dataGrid.getData());
+			pageableResultData.gotoPage(sbpo.getCurPage());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 //        DataGrid<List<ArticlePO>> dataGrid = getData(article, sbpo);
-        DataGrid<List<ArticlePO>> dataGrid = getDataKeyAnalysis(article,sbpo);
+//        DataGrid<List<ArticlePO>> dataGrid = getDataKeyAnalysis(article,sbpo);
         System.out.println(dataGrid.getTotalElements());
         if (null !=dataGrid && dataGrid.getTotalElements() > 0) 
         {
