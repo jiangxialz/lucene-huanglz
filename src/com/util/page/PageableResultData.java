@@ -19,8 +19,8 @@ public interface PageableResultData
     /** 设置分页大小 */
     void setPageSize(int pageSize);
 
-    /** 返回总记录行数 */
-    int getRowsCount();
+    /** 返回总记录数 */
+    int getTotalCount();
 
     /** 转到当前页的第一条记录
      * @exception java.sql.SQLException

@@ -40,6 +40,7 @@ import com.common.confManager.ConfManager;
 import com.constants.IndexConstant;
 import com.search.po.DataGrid;
 import com.ue.data.search.IInderer;
+import com.util.page.PageableResultDataImpl;
 
 public class Indexer implements IInderer
 {
@@ -231,7 +232,7 @@ public class Indexer implements IInderer
      * @return
      * @throws Exception
      */
-  public <T> DataGrid<List<T>> search(T object, String strQueryString, int offset, int limit, String strSorts) throws Exception
+  public <T> PageableResultDataImpl<List<T>> search(T object, String strQueryString, int offset, int limit, String strSorts) throws Exception
   {
       Analyzer analyzer = new IKAnalyzer();
       StringReader reader = new StringReader(strQueryString);
@@ -255,10 +256,10 @@ public class Indexer implements IInderer
    * @return
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public <T> DataGrid<List<T>> search(T object, Query query, int offset, int limit, String strSorts)
+  public <T> PageableResultDataImpl<List<T>> search(T object, Query query, int offset, int limit, String strSorts)
   {
       List<T> resultList = new ArrayList<T>();
-      DataGrid<List<T>> dataGrid =  new DataGrid<List<T>>();
+      PageableResultDataImpl<List<T>> dataGrid =  new PageableResultDataImpl<List<T>>();
       IndexSearcher searcher = null;
       try
       {
@@ -269,8 +270,9 @@ public class Indexer implements IInderer
           if (query == null)
               query = new MatchAllDocsQuery();
 	          TopDocs topDocs = searcher.search(query, null, limit, sort);
-	          dataGrid.setTotalElements(topDocs.totalHits);
+	          dataGrid.setTotalCount(topDocs.totalHits);
 	          ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+	          // limit == scoreDocs.length; ??????我很想知道
 	          Class clazzT = object.getClass();
 	          if (scoreDocs.length > 0)
 	          {
@@ -315,7 +317,7 @@ public class Indexer implements IInderer
               }
           }
       }
-      dataGrid.setData(resultList);
+      dataGrid.setResultData(resultList);
       return dataGrid;
   }
   
@@ -431,7 +433,7 @@ public class Indexer implements IInderer
      * @see [类、类#方法、类#成员]
      */
     
-	  public <T> DataGrid<List<T>> search(T object, String strQueryString, int offset, int limit, String strSorts, Analyzer analyzer)
+	  public <T> PageableResultDataImpl<List<T>> search(T object, String strQueryString, int offset, int limit, String strSorts, Analyzer analyzer)
 	  throws Exception
 	  {
 			if (analyzer == null)

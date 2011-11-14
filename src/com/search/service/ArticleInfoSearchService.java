@@ -8,12 +8,10 @@ import org.apache.commons.lang.StringUtils;
 import com.common.confManager.ConfManager;
 import com.constants.IndexConstant;
 import com.search.po.ArticlePO;
-import com.search.po.DataGrid;
 import com.search.po.SearchBasePO;
 import com.search.support.KeyAnalysisSupport;
 import com.ue.data.search.indexer.lucene.Indexer;
 import com.util.LogHelper;
-import com.util.page.PageableResultData;
 import com.util.page.PageableResultDataImpl;
 
 public class ArticleInfoSearchService 
@@ -21,35 +19,15 @@ public class ArticleInfoSearchService
 	  // 配置管理类实例
     private static ConfManager cm = ConfManager.getInstance();
 
-	public static <T> DataGrid<List<T>> getData(T object, SearchBasePO sbpo)
+    /**
+     * 搜索条件不分词查询
+     * @param object
+     * @param sbpo
+     * @return
+     */
+	public static <T> PageableResultDataImpl<List<T>> getData(T object, SearchBasePO sbpo)
 	{
-		DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
-		String strWhere = sbpo.getParamStr();
-        if (StringUtils.isBlank(strWhere))
-        {
-            return dataGrid;
-        }
-        // 先判断sbpo中的参数map!=null
-        Indexer indexer = new Indexer(cm.getPropValue(IndexConstant.NEWS_PATH), null);
-        
-        int offset = (sbpo.getCurPage()-1)*sbpo.getPageSize();
-//        int offset = PageableResultDataImpl
-        
-        try
-        {
-        	dataGrid = indexer.search(object, strWhere, offset, sbpo.getPageSize(), sbpo.getOrder_str());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        
-		return dataGrid;
-	}
-	
-	public static <T> DataGrid<List<T>> getData2(T object, SearchBasePO sbpo)
-	{
-		DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
+		PageableResultDataImpl<List<T>> dataGrid = new PageableResultDataImpl<List<T>>();
 		String strWhere = sbpo.getParamStr();
         if (StringUtils.isBlank(strWhere))
         {
@@ -60,22 +38,27 @@ public class ArticleInfoSearchService
         
         try
         {
-        	dataGrid = indexer.search(object, strWhere, sbpo.getOffset(), sbpo.getOffset() + sbpo.getLimit(), sbpo.getOrder_str());
+        	dataGrid = indexer.search(object, strWhere, sbpo.getOffset(), sbpo.getOffset()+sbpo.getLimit(), sbpo.getOrder_str());
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-        
 		return dataGrid;
 	}
 	
-	public static <T> DataGrid<List<T>> getDataKeyAnalysis(T object, SearchBasePO sbpo)
+	/**
+	 * 搜索条件分词
+	 * @param object
+	 * @param sbpo
+	 * @return
+	 */
+	public static <T> PageableResultDataImpl<List<T>> getDataKeyAnalysis(T object, SearchBasePO sbpo)
 	{
 		List<T> resultList = new ArrayList<T>();
 		// 防止重复
         ArrayList<String> ids = new ArrayList<String>();
-		DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
+        PageableResultDataImpl<List<T>> dataGrid = new PageableResultDataImpl<List<T>>();
 		 // 建立搜索条件
         ArrayList<String> words = KeyAnalysisSupport.analysePostSearchKey(sbpo);
         // 总记录数
@@ -95,12 +78,12 @@ public class ArticleInfoSearchService
 //                	DataGrid<List<T>> dataGrid_2 =  indexer.search(object, word, 0, 1, null);
 //					dataGrid.setTotalElements(dataGrid_2.getTotalElements());
 //				}
-                if (dataGrid.getData().size() > 0)
+                if (dataGrid.getResultData().size() > 0)
                 {
                     sbpo.setOffset(0);
-                    for (int i = 0; sbpo.getLimit() - ids.size() > 0 && i < dataGrid.getData().size(); i++)
+                    for (int i = 0; sbpo.getLimit() - ids.size() > 0 && i < dataGrid.getResultData().size(); i++)
                     {
-                    	object = (T) dataGrid.getData().get(i);
+                    	object = (T) dataGrid.getResultData().get(i);
                     	resultList.add(object);
 //                    	String strID = ((T) object).getId();
 ////                    	String strID = dt.getRow(i).getString("ID");
@@ -117,20 +100,20 @@ public class ArticleInfoSearchService
                 }
                 else
                 {
-                    sbpo.setOffset(sbpo.getOffset() - dataGrid.getTotalElements());
+                    sbpo.setOffset(sbpo.getOffset() - dataGrid.getTotalCount());
                     if (sbpo.getOffset() < 0)
                         sbpo.setOffset(0);
                 }
                 // 总记录
-                lngRowCount += dataGrid.getTotalElements();
+                lngRowCount += dataGrid.getTotalCount();
             }
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-        dataGrid.setData(resultList);
-        dataGrid.setTotalElements(lngRowCount);
+        dataGrid.setResultData(resultList);
+        dataGrid.setTotalCount(lngRowCount);
         return dataGrid;
 	}
 	
@@ -204,25 +187,21 @@ public class ArticleInfoSearchService
 	public static void main(String[] args)
 	{
 		SearchBasePO sbpo = new SearchBasePO();
+		int curPage = 1;
+		sbpo.setCurPage(curPage);
 //		sbpo.setParam("key", "软件开发工程师");
 //        sbpo.setParam("type", "title");
-		sbpo.setOffset(1);
         sbpo.setParamStr("content:输入");
         sbpo.setOrder_str("intCreateTime desc");
         ArticlePO article = new ArticlePO();
-        DataGrid<List<ArticlePO>> dataGrid = getData(article, sbpo);
-        try {
-			PageableResultData pageableResultData = (PageableResultData) new PageableResultDataImpl(dataGrid.getData());
-			pageableResultData.gotoPage(sbpo.getCurPage());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-//        DataGrid<List<ArticlePO>> dataGrid = getData(article, sbpo);
-//        DataGrid<List<ArticlePO>> dataGrid = getDataKeyAnalysis(article,sbpo);
-        System.out.println(dataGrid.getTotalElements());
-        if (null !=dataGrid && dataGrid.getTotalElements() > 0) 
+
+//        PageableResultDataImpl<List<ArticlePO>> dataGrid2 = getData(article, sbpo);
+        PageableResultDataImpl<List<ArticlePO>> dataGrid = getDataKeyAnalysis(article,sbpo);
+        dataGrid.init(sbpo.getCurPage(), sbpo.getLimit());
+        System.out.println(dataGrid.getTotalCount());
+        if (null !=dataGrid && dataGrid.getTotalCount() > 0) 
         {
-        	List<ArticlePO> list = (List<ArticlePO>)dataGrid.getData();
+        	List<ArticlePO> list = (List<ArticlePO>)dataGrid.getResultData();
 	        for (ArticlePO articlePO : list) 
 	        {
 				System.out.println("id : "+ articlePO.getId()+ " title :"+articlePO.getTitle()+ "  intCreateTime : " + articlePO.getIntCreateTime());
