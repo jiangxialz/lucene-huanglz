@@ -57,7 +57,7 @@ public class ArticleInfoSearchService
 	{
 		List<T> resultList = new ArrayList<T>();
 		// 防止重复
-        ArrayList<String> ids = new ArrayList<String>();
+//        ArrayList<String> ids = new ArrayList<String>();
         PageableResultDataImpl<List<T>> dataGrid = new PageableResultDataImpl<List<T>>();
 		 // 建立搜索条件
         ArrayList<String> words = KeyAnalysisSupport.analysePostSearchKey(sbpo);
@@ -81,7 +81,7 @@ public class ArticleInfoSearchService
                 if (dataGrid.getResultData().size() > 0)
                 {
                     sbpo.setOffset(0);
-                    for (int i = 0; sbpo.getLimit() - ids.size() > 0 && i < dataGrid.getResultData().size(); i++)
+                    for (int i = 0; sbpo.getLimit() - resultList.size() > 0 && i < dataGrid.getResultData().size(); i++)
                     {
                     	object = (T) dataGrid.getResultData().get(i);
                     	resultList.add(object);
@@ -187,15 +187,15 @@ public class ArticleInfoSearchService
 	public static void main(String[] args)
 	{
 		SearchBasePO sbpo = new SearchBasePO();
-		int curPage = 1;
+		int curPage = 2;
 		sbpo.setCurPage(curPage);
-//		sbpo.setParam("key", "软件开发工程师");
-//        sbpo.setParam("type", "title");
-        sbpo.setParamStr("content:输入");
+		sbpo.setParam("key", "软件开发工程师");
+        sbpo.setParam("type", "title");
+//        sbpo.setParamStr("content:输入");
         sbpo.setOrder_str("intCreateTime desc");
         ArticlePO article = new ArticlePO();
 
-//        PageableResultDataImpl<List<ArticlePO>> dataGrid2 = getData(article, sbpo);
+//        PageableResultDataImpl<List<ArticlePO>> dataGrid = getData(article, sbpo);
         PageableResultDataImpl<List<ArticlePO>> dataGrid = getDataKeyAnalysis(article,sbpo);
         dataGrid.init(sbpo.getCurPage(), sbpo.getLimit());
         System.out.println(dataGrid.getTotalCount());
