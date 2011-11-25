@@ -43,6 +43,7 @@ public class KeyAnalysisSupport {
 		if (keywords.size() > 0)
 		{
 			for (int i = 0; i < keywords.size(); i++) {
+				// 对于【+ - & | ! ( ) { } [ ] ^ ~ * ? : \ 】之类进行转义
 				String word = QueryParser.escape(keywords.get(i));
 				// 加上搜索关键词 type 表示是职位名搜索还是公司名搜索
 				keywords.set(i, " ( "+ sbpo.getParamMap().get("type") + " : " + word +  notsb.toString() +" ) ");
