@@ -32,6 +32,10 @@ public class DictionaryAnalyzer
 
     /**
      * <查询条件分词 IK分词器 使用自定义职位系列分词词库 词库在IKjar包的main.dic>
+     * 
+     * 通过loadExtendStopWords方法后扩充的词没有存储在文件内。 
+	 * 主词典是指内存中的词典对象，即，扩展词和原本词库内的词都会在内存中合并到相同的词库中。 
+	 * IK的字典是单向加载模式，不会反向的存储到磁盘文件中，可以通过配置从文件中读取，也可以通过API动态添加。 
      */
     @SuppressWarnings("unchecked")
 	public ArrayList<String> analyse(String paramString)
@@ -40,6 +44,7 @@ public class DictionaryAnalyzer
         StringReader sr = new StringReader(paramString);
         ArrayList<String> localArrayList = new ArrayList<String>();
         IKSegmentation iks = new IKSegmentation(sr);
+        // 将扩展词加入扩展词典
         Dictionary.loadExtendWords(this.a);
         try
         {
