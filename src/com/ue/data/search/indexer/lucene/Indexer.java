@@ -269,16 +269,19 @@ public class Indexer implements IInderer
           Sort sort = getFieldsSort(strSorts);
           if (query == null)
               query = new MatchAllDocsQuery();
+              // 对索引中的字段进行查询
 	          TopDocs topDocs = searcher.search(query, null, limit, sort);
 	          dataGrid.setTotalCount(topDocs.totalHits);
 	          ScoreDoc[] scoreDocs = topDocs.scoreDocs;
-	          // limit == scoreDocs.length; ??????我很想知道
+	          // limit == scoreDocs.length; 
 	          Class clazzT = object.getClass();
 	          if (scoreDocs.length > 0)
 	          {
 	              Document document = searcher.doc(scoreDocs[0].doc);
+//	              java.text.NumberFormat format = java.text.NumberFormat.getNumberInstance();  
 	              for (int i = offset; i < scoreDocs.length; i++)
 	              {
+//	            	  System.out.println("准确度为：" + format.format(scoreDocs[i].score * 100.0) + "%");
 	                  document = searcher.doc(scoreDocs[i].doc);
 	                  T o = (T)clazzT.newInstance();  
 	                  for (Fieldable fieldable : document.getFields())
@@ -438,6 +441,7 @@ public class Indexer implements IInderer
 	  {
 			if (analyzer == null)
 			  analyzer = new StandardAnalyzer(Version.LUCENE_CURRENT);
+			// 为查询分析器QueryParser 指定查询字段和分词器
 			QueryParser queryParser = new QueryParser(Version.LUCENE_CURRENT, "", analyzer);
 			queryParser.setAllowLeadingWildcard(true);// 设为true，允许使用通配符
 			queryParser.setEnablePositionIncrements(false);// 设为true，以便在查询结果的立场增量
@@ -446,6 +450,7 @@ public class Indexer implements IInderer
 			if (StringUtils.isNotBlank(strQueryString))
 			{
 			  queryParser.setDefaultOperator(QueryParser.OR_OPERATOR);// 设置的QueryParser的布尔运算符。
+			  // 用分析器 queryParser创建查询语句,关键字为strQueryString
 			  query = queryParser.parse(strQueryString);
 			}
 			return search(object, query, offset, limit, strSorts);
