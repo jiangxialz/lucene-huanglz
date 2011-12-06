@@ -32,7 +32,7 @@ public class KeyAnalysisSupport {
 		if (StringUtils.isNotBlank(keyString)) 
 		{
 			keywords = mainsegmenter.analyse(keyString);
-//			keywords.add(keyString);
+			keywords.add(keyString);  // 该句主要是当查询条件为英文时保证分词后的查询条件不为空
 			Comparator<String> comp = new StrLengthComparator();
 			Collections.sort(keywords, comp);
 		}
