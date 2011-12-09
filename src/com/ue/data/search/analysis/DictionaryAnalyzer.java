@@ -11,15 +11,15 @@ import org.wltea.analyzer.dic.Dictionary;
 import com.search.dictionary.DictionarySet;
 import com.util.LogHelper;
 
-/*
- * 文 件 名:  DictionaryAnalyzer.java
- * 版    权:  深圳埃思欧纳信息咨询有限公司版权所有. YYYY-YYYY,  All rights reserved
- * 描    述:  <描述>
- * 修 改 人:  jeray.wu
- * 修改时间:  2011-3-23
- * 跟踪单号:  <跟踪单号>
- * 修改单号:  <修改单号>
- * 修改内容:  <修改内容>
+/**
+ * 
+ * <分词器，加载扩展词典>
+ * <功能详细描述>
+ * 
+ * @author  huanglz
+ * @version  [版本号, 2011-12-9]
+ * @see  [相关类/方法]
+ * @since  [产品/模块版本]
  */
 public class DictionaryAnalyzer
 {
@@ -40,18 +40,28 @@ public class DictionaryAnalyzer
     @SuppressWarnings("unchecked")
 	public ArrayList<String> analyse(String paramString)
     {
+    	// IK Analyzer语义单元（词元）
         Lexeme lex;
         StringReader sr = new StringReader(paramString);
         ArrayList<String> localArrayList = new ArrayList<String>();
+        // IK主分词器 注：IKSegmentation是一个lucene无关的通用分词器,默认最细粒度切分
         IKSegmentation iks = new IKSegmentation(sr);
+        /**
+         * 1、public IKSegmentation(java.io.Reader input) ，默认最细粒度切分
+         * 2、public IKSegmentation(java.io.Reader input,boolean isMaxWordLength) 
+         *    其中isMaxWordLength - 当为true时，分词器进行最大词长切分
+         * */
         // 将扩展词加入扩展词典
         Dictionary.loadExtendWords(this.a);
         try
         {
+        	// 获取下一个语义单元，没有更多的词元，则返回null
             for (lex = iks.next(); lex != null; lex = iks.next())
             {
+            	// 获取词元类型
                 if ((lex.getLexemeType() != 0) && (lex.getLexemeType() != 2))
                     continue;
+                // 获取词元的文本内容
                 localArrayList.add(lex.getLexemeText());
             }
         }
