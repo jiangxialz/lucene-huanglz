@@ -38,7 +38,6 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.common.confManager.ConfManager;
 import com.constants.IndexConstant;
-import com.search.po.DataGrid;
 import com.ue.data.search.IInderer;
 import com.util.page.PageableResultDataImpl;
 
@@ -84,29 +83,39 @@ public class Indexer implements IInderer
     /*
      * @see com.ue.data.search.IIndexer#close()
      */
-    public void close() throws IOException
+    @SuppressWarnings("static-access")
+	public void close() throws IOException
     {
+    	/**
+    	 * write.lock  bug
+    	 * after which, you must be certain not to use the writer instance anymore.
+    	 * try {
+			   	writer.close();
+			 } finally {
+			   if (IndexWriter.isLocked(directory)) {
+			     IndexWriter.unlock(directory);
+			   }
+			 }
+    	 */
         if (m_indexWriter != null)
         {
-            try
-            {
-            	// 关闭IndexWriter时,才把内存中的数据写到文件
-                m_indexWriter.close(); 
-            }
-            catch (IOException e)
-            {
+            try{
+                m_indexWriter.close(); // 关闭IndexWriter时,才把内存中的数据写到文件
+            }catch (IOException e){
                 e.printStackTrace();
-            }
-        }
-        if (m_directory != null)
-        {
-            try
-            {
-                m_directory.close(); // 关闭索引存放目录
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
+            }finally {
+            	 if (m_directory != null)
+            	 {
+            		 if (m_indexWriter.isLocked(m_directory))
+    	           	 {
+    	       			  m_indexWriter.unlock(m_directory);
+    	       		 }
+            		 try{
+                         m_directory.close(); // 关闭索引存放目录
+                     }catch (IOException e){
+                         e.printStackTrace();
+                     }
+            	 }
             }
         }
     }
@@ -237,6 +246,17 @@ public class Indexer implements IInderer
       Analyzer analyzer = new IKAnalyzer();
       StringReader reader = new StringReader(strQueryString);
       TokenStream ts = analyzer.tokenStream("*", reader);
+      //添加工具类  注意：以下这些与之前lucene2.x版本不同的地方  
+      /**
+       * 2011-12-14 16:05:05 [INFO]-[ArticleInfoSearchService.java:73]-[main]-sbWhere=======   ( title : 软件开发工程师 ) 
+       * 软件开发|(11 15)软件|(11 13)开发|(13 15)工程师|(15 18)工程|(15 17)
+       */
+//      TermAttribute termAtt  = (TermAttribute)ts.addAttribute(TermAttribute.class);  
+//      OffsetAttribute offAtt  = (OffsetAttribute)ts.addAttribute(OffsetAttribute.class);  
+//      // 循环打印出分词的结果，及分词出现的位置  
+//      while(ts.incrementToken()){  
+//          System.out.print(termAtt.term() + "|("+ offAtt.startOffset() + " " + offAtt.endOffset()+")");   
+//      }  
       Iterator<AttributeImpl> it = ts.getAttributeImplsIterator();
       while (it.hasNext())
       {
