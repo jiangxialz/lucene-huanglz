@@ -1,10 +1,13 @@
 package com.ue.data.search.indexer.lucene;
 
+import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
@@ -275,8 +280,8 @@ public class Indexer implements IInderer
    * @param strSorts
    * @return
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  public <T> PageableResultDataImpl<List<T>> search(T object, Query query, int offset, int limit, String strSorts)
+  @SuppressWarnings("unchecked")
+public <T> PageableResultDataImpl<List<T>> search(T object, Query query, int offset, int limit, String strSorts)
   {
       List<T> resultList = new ArrayList<T>();
       PageableResultDataImpl<List<T>> dataGrid =  new PageableResultDataImpl<List<T>>();
@@ -308,6 +313,13 @@ public class Indexer implements IInderer
 	                  {
 	                      String strField = fieldable.name();
 	                      String strValue = document.get(strField);
+	                      /**
+	                       *  如果索引字段大小写与bean中的一样，则可以简单的只调用一句代码
+	                       *  BeanUtils.setProperty(o, strField, strValue);
+	                       *  或者PropertyUtils.setProperty(o, strField, strValue);
+	                       */
+	                      
+	                      // 如果索引字段大写与bean中的字段允许不区分大小写，则有如下两种写法：
 	                      for (Method method : getSetterMethodList(clazzT)) 
 	                      {  
 	                    	// 得到set开头方法字符串对应的字段值，如setName,转变后Name  
@@ -316,7 +328,16 @@ public class Indexer implements IInderer
 	                    		method.invoke(o, strValue);  
 	                    		break;
 							}  
-	      	              }  
+	      	              }
+	                      /**
+	                       * 或者(该方法不适用)
+	                       * 
+	                       * 如果一个字段是由多个单词组成的，整个字段都小写，而索引中首单词小写后面的单词大写
+	                       * 则会抛错java.beans.IntrospectionException: Method not found: isID
+	                       * bean中和索引字段中一个大写，一个小写也会抛错，如：id与ID。
+	                       * 
+	                       * setProperties(o, strField, strValue); 
+	                       */
 	                  }
 	                  resultList.add(o);
 	              }
@@ -402,6 +423,50 @@ public class Indexer implements IInderer
         else
             return SortField.STRING;
     }
+    
+    /**
+     * 给Object对象中指定的属性设置值
+     * @param obj
+     * @param propertyName
+     * @param value
+     * @throws IntrospectionException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+	private static void setProperties(Object obj, String propertyName,
+			Object value) throws IntrospectionException,
+			IllegalAccessException, InvocationTargetException {
+		// 机制是看有没有属性propertyName的get和set方法
+		PropertyDescriptor pd = new PropertyDescriptor(propertyName,obj.getClass());
+		Method methodSetX = pd.getWriteMethod();
+		methodSetX.invoke(obj,value);
+	}
+	
+	/**
+	 * 从Object对象中取出指定属性的值
+	 * @param obj
+	 * @param propertyName
+	 * @return
+	 * @throws IntrospectionException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 */
+	private static Object getProperty(Object obj, String propertyName)
+			throws IntrospectionException, IllegalAccessException,
+			InvocationTargetException {
+		BeanInfo beanInfo =  Introspector.getBeanInfo(obj.getClass());
+		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+		Object retVal = null;
+		for(PropertyDescriptor pd : pds){
+			if(pd.getName().equalsIgnoreCase(propertyName))
+			{
+				Method methodGetX = pd.getReadMethod();
+				retVal = methodGetX.invoke(obj);
+				break;
+			}
+		}
+		return retVal;
+	}
     
     /**
      * 获取bean中所有setter方法
