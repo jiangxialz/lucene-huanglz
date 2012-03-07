@@ -13,10 +13,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
@@ -174,18 +173,20 @@ public class Indexer implements IInderer
     public boolean add(HashMap<String, Object> map) throws Exception
     {
         Document document = new Document();
-        for (String strKey : map.keySet())
+        for (Map.Entry<String, Object> entry : map.entrySet())
         {
-            if (map.get(strKey) != null)
+        	String strKey = entry.getKey();
+        	Object objValue = entry.getValue();
+            if (strKey != null)
             {
-                Field field = new Field(strKey, map.get(strKey).toString(), Field.Store.YES, Field.Index.ANALYZED);
+                Field field = new Field(strKey, objValue.toString(), Field.Store.YES, Field.Index.ANALYZED);
                 document.add(field);
             }
         }
         m_indexWriter.addDocument(document);
         return true;
     }
-
+    
     /**
      * <优化索引>
      */
@@ -225,18 +226,20 @@ public class Indexer implements IInderer
     {
         Term term = new Term("ID", strID);
         Document document = new Document();
-        for (String strKey : map.keySet())
+        for (Map.Entry<String, Object> entry : map.entrySet())
         {
-            if (map.get(strKey) != null)
+        	String strKey = entry.getKey();
+        	Object objValue = entry.getValue();
+            if (strKey != null)
             {
-                Field field = new Field(strKey, map.get(strKey).toString(), Field.Store.YES, Field.Index.ANALYZED);
+                Field field = new Field(strKey, objValue.toString(), Field.Store.YES, Field.Index.ANALYZED);
                 document.add(field);
             }
         }
         m_indexWriter.updateDocument(term, document);
         return true;
     }
-
+    
     /**
      * 搜索
      * @param strQueryString 查询条件
