@@ -177,7 +177,7 @@ public class Indexer implements IInderer
         {
         	String strKey = entry.getKey();
         	Object objValue = entry.getValue();
-            if (strKey != null)
+            if (objValue != null)
             {
                 Field field = new Field(strKey, objValue.toString(), Field.Store.YES, Field.Index.ANALYZED);
                 document.add(field);
@@ -230,7 +230,7 @@ public class Indexer implements IInderer
         {
         	String strKey = entry.getKey();
         	Object objValue = entry.getValue();
-            if (strKey != null)
+            if (objValue != null)
             {
                 Field field = new Field(strKey, objValue.toString(), Field.Store.YES, Field.Index.ANALYZED);
                 document.add(field);
