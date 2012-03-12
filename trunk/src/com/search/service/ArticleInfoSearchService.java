@@ -81,6 +81,9 @@ public class ArticleInfoSearchService
                 if (dataGrid.getResultData().size() > 0)
                 {
                     sbpo.setOffset(0);
+                    /** 第一个分词结果集大于5条的话只取第一个分词结果集前5条记录；如果小于5，取第一
+                                                                分词结果集n条记录(n<5)+第二个分词结果集的前5-n条记录
+                    */
                     for (int i = 0; sbpo.getLimit() - resultList.size() > 0 && i < dataGrid.getResultData().size(); i++)
                     {
                     	object = (T) dataGrid.getResultData().get(i);
@@ -187,16 +190,18 @@ public class ArticleInfoSearchService
 	public static void main(String[] args)
 	{
 		SearchBasePO sbpo = new SearchBasePO();
-		int curPage = 2;
+		int curPage = 1;
 		sbpo.setCurPage(curPage);
-		sbpo.setParam("key", "软件开发工程师");
-        sbpo.setParam("type", "title");
-//        sbpo.setParamStr("content:输入");
-        sbpo.setOrder_str("intCreateTime desc");
+//		sbpo.setParam("key", "软件开发工程师");
+//        sbpo.setParam("type", "title");
+//        sbpo.setOrder_str("type desc");
+//		String paramStr = "intCreateTime : 20111108  AND (*:* OR type : 2^3)";
+		String paramStr = "title :工程师  OR content: 工程师  OR type: 2";
+		sbpo.setParamStr(paramStr);
         ArticlePO article = new ArticlePO();
 
-//        PageableResultDataImpl<List<ArticlePO>> dataGrid = getData(article, sbpo);
-        PageableResultDataImpl<List<ArticlePO>> dataGrid = getDataKeyAnalysis(article,sbpo);
+        PageableResultDataImpl<List<ArticlePO>> dataGrid = getData(article, sbpo);
+//        PageableResultDataImpl<List<ArticlePO>> dataGrid = getDataKeyAnalysis(article,sbpo);
         dataGrid.init(sbpo.getCurPage(), sbpo.getLimit());
         System.out.println(dataGrid.getTotalCount());
         if (null !=dataGrid && dataGrid.getTotalCount() > 0) 
@@ -204,7 +209,7 @@ public class ArticleInfoSearchService
         	List<ArticlePO> list = (List<ArticlePO>)dataGrid.getResultData();
 	        for (ArticlePO articlePO : list) 
 	        {
-				System.out.println("id : "+ articlePO.getId()+ " title :"+articlePO.getTitle()+ "  intCreateTime : " + articlePO.getIntCreateTime());
+				System.out.println("id : "+ articlePO.getId()+ " title :"+articlePO.getTitle()+ " content :"+articlePO.getContent()+ " CreateTime : " + articlePO.getCreate_time()+" type : " + articlePO.getType());
 			}
         }
 	}
