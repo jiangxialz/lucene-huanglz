@@ -8,6 +8,13 @@ public class ArticlePO
 	private String author;
 	private String create_time;
 	private String intCreateTime;
+	private String type;
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
+	}
 	public String getIntCreateTime() {
 		return intCreateTime;
 	}
