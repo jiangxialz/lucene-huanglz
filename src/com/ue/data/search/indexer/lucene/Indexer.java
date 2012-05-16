@@ -251,6 +251,7 @@ public class Indexer implements IInderer
      */
   public <T> PageableResultDataImpl<List<T>> search(T object, String strQueryString, int offset, int limit, String strSorts) throws Exception
   {
+	  /**
       Analyzer analyzer = new IKAnalyzer();
       StringReader reader = new StringReader(strQueryString);
       TokenStream ts = analyzer.tokenStream("*", reader);
@@ -258,7 +259,7 @@ public class Indexer implements IInderer
       /**
        * 2011-12-14 16:05:05 [INFO]-[ArticleInfoSearchService.java:73]-[main]-sbWhere=======   ( title : 软件开发工程师 ) 
        * 软件开发|(11 15)软件|(11 13)开发|(13 15)工程师|(15 18)工程|(15 17)
-       */
+       *
 //      TermAttribute termAtt  = (TermAttribute)ts.addAttribute(TermAttribute.class);  
 //      OffsetAttribute offAtt  = (OffsetAttribute)ts.addAttribute(OffsetAttribute.class);  
 //      // 循环打印出分词的结果，及分词出现的位置  
@@ -270,6 +271,7 @@ public class Indexer implements IInderer
       {
           System.out.println((AttributeImpl) it.next());
       }
+      */
       return search(object, strQueryString, offset, limit, strSorts, null);
   }
 
@@ -328,8 +330,14 @@ public <T> PageableResultDataImpl<List<T>> search(T object, Query query, int off
 	                    	// 得到set开头方法字符串对应的字段值，如setName,转变后Name  
 	                    	if (method.getName().substring(SETFLAG.length()).equalsIgnoreCase(strField)) 
 	                    	{
-	                    		method.invoke(o, strValue);  
-	                    		break;
+	                    		if(strField.equals("type"))
+	                    		{
+	                    			method.invoke(o, Integer.parseInt(strValue));  
+		                    		break;
+	                    		}else {
+	                    			method.invoke(o, strValue);  
+		                    		break;
+								}
 							}  
 	      	              }
 	                      /**
@@ -527,9 +535,13 @@ public <T> PageableResultDataImpl<List<T>> search(T object, Query query, int off
 	  public <T> PageableResultDataImpl<List<T>> search(T object, String strQueryString, int offset, int limit, String strSorts, Analyzer analyzer)
 	  throws Exception
 	  {
+		
 			if (analyzer == null)
+			{
 			  analyzer = new StandardAnalyzer(Version.LUCENE_CURRENT);
+			}
 			// 为查询分析器QueryParser 指定查询字段和分词器
+			// QueryParser组合多种分析器，提供类似sql语句的lucene查询语句，以方便实现高级搜索行为。
 			QueryParser queryParser = new QueryParser(Version.LUCENE_CURRENT, "", analyzer);
 			queryParser.setAllowLeadingWildcard(true);// 设为true，允许使用通配符
 			queryParser.setEnablePositionIncrements(false);// 设为true，以便在查询结果的立场增量
@@ -539,7 +551,8 @@ public <T> PageableResultDataImpl<List<T>> search(T object, Query query, int off
 			{
 			  queryParser.setDefaultOperator(QueryParser.OR_OPERATOR);// 设置的QueryParser的布尔运算符。
 			  // 用分析器 queryParser创建查询语句,关键字为strQueryString
-			  query = queryParser.parse(strQueryString);
+			  // 用创建的分词器对关键字querystring分词,然后对索引中的content字段进行查询
+			  query = queryParser.parse(strQueryString); 
 			}
 			return search(object, query, offset, limit, strSorts);
 	 }
