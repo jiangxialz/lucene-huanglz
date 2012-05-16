@@ -1,7 +1,11 @@
 package com.test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class Test 
 {
@@ -51,17 +55,28 @@ public class Test
 	}*/
 	
 	public static void main(String[] args) {
-		String aString = "adfadsfa该罚的，http:www.aceona.com ";
+//		String aString = "adfadsfa该罚的，http:www.aceona.com ";
 //		String bString = "adfadsfa该罚的，<a href=\"http://www.aceona.com\">";
-		if (aString.indexOf("http")!=-1) 
-		{
-			int i = aString.indexOf("http");
-			int j = aString.indexOf(" ");
-			String cString = aString.substring(i,j);
-			String dString = "<a href='"+cString+"'>";
-			aString.replace(cString, "asdfasdfasdf");
-			System.out.println(aString);
+//		if (aString.indexOf("http")!=-1) 
+//		{
+//			int i = aString.indexOf("http");
+//			int j = aString.indexOf(" ");
+//			String cString = aString.substring(i,j);
+//			String dString = "<a href='"+cString+"'>";
+//			aString.replace(cString, "asdfasdfasdf");
+//			System.out.println(aString);
+//		}
+		
+		int maxValue = Integer.MIN_VALUE;
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		map.put("2000", 10);
+		map.put("2000", 15);
+		map.put("2000", 20);
+		Iterator<Integer> values = map.values().iterator();
+		while (values.hasNext()) {
+			maxValue = Math.max(maxValue, values.next().intValue());
 		}
+		System.out.println(maxValue);
 	}
 
 }
