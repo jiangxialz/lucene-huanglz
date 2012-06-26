@@ -1,0 +1,147 @@
+BODY {
+	FONT-FAMILY: arial
+}
+TD {
+	FONT-FAMILY: arial
+}
+.p1 {
+	FONT-FAMILY: arial
+}
+.p2 {
+	FONT-FAMILY: arial
+}
+.i {
+	FONT-FAMILY: arial
+}
+BODY {
+	POSITION: relative; BACKGROUND-COLOR: #fff; MARGIN: 6px 0px 0px; COLOR: #000
+}
+INPUT {
+	BOX-SIZING: border-box; PADDING-BOTTOM: 0px; PADDING-TOP: 0px; -moz-box-sizing: border-box; -webkit-box-sizing: border-box
+}
+TABLE {
+	BORDER-RIGHT-WIDTH: 0px; BORDER-TOP-WIDTH: 0px; BORDER-BOTTOM-WIDTH: 0px; BORDER-LEFT-WIDTH: 0px
+}
+TD {
+	LINE-HEIGHT: 18px; FONT-SIZE: 9pt
+}
+EM {
+	FONT-STYLE: normal; COLOR: #c60a00
+}
+A EM {
+	TEXT-DECORATION: underline
+}
+.f14 {
+	FONT-SIZE: 14px
+}
+.f10 {
+	FONT-SIZE: 10.5pt
+}
+.f16 {
+	FONT-FAMILY: Arial; FONT-SIZE: 16px
+}
+.c {
+	COLOR: #7777cc
+}
+.p1 {
+	LINE-HEIGHT: 120%; MARGIN-LEFT: -12pt
+}
+.p2 {
+	LINE-HEIGHT: 120%; WIDTH: 100%; MARGIN-LEFT: -12pt
+}
+.i {
+	LINE-HEIGHT: 1.4em; HEIGHT: 24px; FONT-SIZE: 16px
+}
+.t {
+	COLOR: #0000cc; TEXT-DECORATION: none
+}
+A.t:hover {
+	TEXT-DECORATION: underline
+}
+.p {
+	MARGIN: 0px 0px 20px; PADDING-LEFT: 18px; FONT-SIZE: 14px; WORD-SPACING: 4px
+}
+.f {
+	LINE-HEIGHT: 120%; PADDING-LEFT: 15px; WIDTH: 33.7em; WORD-WRAP: break-word; FONT-SIZE: 100%; WORD-BREAK: break-all
+}
+.h {
+	WIDTH: 100%; MARGIN-LEFT: 8px
+}
+.s {
+	PADDING-LEFT: 10px; WIDTH: 8%; HEIGHT: 25px
+}
+.m {
+	COLOR: #666; FONT-SIZE: 100%
+}
+A.m:link {
+	COLOR: #666; FONT-SIZE: 100%
+}
+A.m:visited {
+	COLOR: #660066
+}
+.g {
+	COLOR: #008000; FONT-SIZE: 12px
+}
+.r {
+	WIDTH: 238px; WORD-BREAK: break-all; CURSOR: hand
+}
+.bi {
+	BACKGROUND-COLOR: #d9e1f7; MARGIN-BOTTOM: 12px; HEIGHT: 20px
+}
+.pl {
+	PADDING-LEFT: 3px; PADDING-RIGHT: 2px; HEIGHT: 8px; FONT-SIZE: 14px
+}
+.Tit {
+	HEIGHT: 21px; FONT-SIZE: 14px
+}
+.Tit A {
+	COLOR: #0000cc
+}
+.fB {
+	FONT-WEIGHT: bold
+}
+.mo {
+	LINE-HEIGHT: 10px; COLOR: #666666; FONT-SIZE: 100%
+}
+A.mo:link {
+	LINE-HEIGHT: 10px; COLOR: #666666; FONT-SIZE: 100%
+}
+A.mo:visited {
+	LINE-HEIGHT: 10px; COLOR: #666666; FONT-SIZE: 100%
+}
+.htb {
+	MARGIN-BOTTOM: 5px
+}
+#ft {
+	TEXT-ALIGN: center; LINE-HEIGHT: 20px; BACKGROUND: #e6e6e6; CLEAR: both
+}
+#ft {
+	FONT-FAMILY: Arial; COLOR: #77c; FONT-SIZE: 12px
+}
+#ft * {
+	FONT-FAMILY: Arial; COLOR: #77c; FONT-SIZE: 12px
+}
+#ft SPAN {
+	COLOR: #666
+}
+FORM {
+	Z-INDEX: 9; POSITION: relative; MARGIN: 0px
+}
+.jc A {
+	COLOR: #c60a00
+}
+.btn {
+	WIDTH: 5.6em; HEIGHT: 2em; MARGIN-LEFT: 3px; FONT-SIZE: 14px; PADDING-TOP: 2px
+}
+.i {
+	VERTICAL-ALIGN: baseline
+}
+.btn {
+	VERTICAL-ALIGN: baseline
+}
+A FONT[size='3'] FONT {
+	TEXT-DECORATION: underline
+}
+FONT[size='3'] A FONT {
+	TEXT-DECORATION: underline
+}

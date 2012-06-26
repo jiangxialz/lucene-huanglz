@@ -10,5 +10,11 @@ public class IndexConstant
     
     /** 索引文件名 */
     public static String SEGMENTS = "segments";
+    
+	/** 职位索引地址 **/
+	public static String POST_PATH = "postinfo";
+	
+	/**  职位查询limit */
+    public static String POSTINFO_LIMIT = "postlimit";
 
 }
