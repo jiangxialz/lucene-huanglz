@@ -1,18 +1,28 @@
 package com.search.po;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+
 public class ArticlePO 
 {
+	@JsonProperty("ID")
 	private String id;
+//	private String ID;
+//	public String getID() {
+//		return ID;
+//	}
+//	public void setID(String ID) {
+//		this.ID = ID;
+//	}
 	private String title;
 	private String content;
 	private String author;
 	private String create_time;
 	private String intCreateTime;
-	private String type;
-	public String getType() {
+	private int type;
+	public int getType() {
 		return type;
 	}
-	public void setType(String type) {
+	public void setType(int type) {
 		this.type = type;
 	}
 	public String getIntCreateTime() {

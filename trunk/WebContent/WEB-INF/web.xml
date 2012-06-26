@@ -1,7 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app id="WebApp_ID" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+<web-app id="WebApp_ID" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
  <!-- 	<display-name>sample.dw.paper.lucene</display-name>    -->
  <display-name>luceneTest</display-name>
+	
+	<servlet>
+		<servlet-name>PostInfoIndex</servlet-name>
+		<servlet-class>self.wonder.search.PostInfoIndex</servlet-class>
+	</servlet>
+	
+	<servlet-mapping>
+		<servlet-name>PostInfoIndex</servlet-name>
+		<url-pattern>/PostInfoIndex</url-pattern>
+	</servlet-mapping>
+	
+	<servlet>
+		<servlet-name>PostInfoSearch</servlet-name>
+		<servlet-class>self.wonder.search.PostInfoSearch</servlet-class>
+	</servlet>
+	
+	<servlet-mapping>
+		<servlet-name>PostInfoSearch</servlet-name>
+		<url-pattern>/PostInfoSearch</url-pattern>
+	</servlet-mapping>
 	
 	<servlet>
 		<servlet-name>SearchController</servlet-name>
@@ -12,7 +34,17 @@
 		<servlet-name>SearchController</servlet-name>
 		<url-pattern>/SearchController</url-pattern>
 	</servlet-mapping>
+	 
+	<servlet>
+		<servlet-name>mySearchController</servlet-name>
+		<servlet-class>com.article.myownservlet.mySearchController</servlet-class>
+	</servlet>
 	
+	<servlet-mapping>
+		<servlet-name>mySearchController</servlet-name>
+		<url-pattern>/mySearchController</url-pattern>
+	</servlet-mapping>
+	 
 	<servlet>
 		<servlet-name>ImageCodeMakerServlet</servlet-name>
 		<servlet-class>com.article.servlet.ImageCodeMakerServlet</servlet-class>
@@ -46,7 +78,7 @@
 		<url-pattern>/queryDB</url-pattern>
 	</servlet-mapping>
 	
-	<!-- 初始化log4j begin -->
+	<!-- 初始化log4j begin 
 	<servlet>
       <servlet-name>log4j-init</servlet-name>
       <servlet-class>com.log.InitLog4jServlet</servlet-class>
@@ -56,7 +88,7 @@
        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
-    <!-- 初始化log4j end -->
+          初始化log4j end -->
     
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>

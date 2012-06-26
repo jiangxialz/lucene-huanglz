@@ -29,6 +29,10 @@ public class Dictionary {
 	public static final String PATH_DIC_PREP = "/org/wltea/analyzer/dic/preposition.dic";
 	public static final String PATH_DIC_STOP = "/org/wltea/analyzer/dic/stopword.dic";
 	
+	public static void main(String[] args) {
+		Dictionary dictionary = new Dictionary();
+		dictionary.loadSurnameDict();
+	}
 	
 	/*
 	 * 词典单子实例
