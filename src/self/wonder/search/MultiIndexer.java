@@ -6,12 +6,8 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -33,6 +29,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.MultiSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
@@ -50,13 +47,11 @@ import com.constants.IndexConstant;
 import com.search.po.DataGrid;
 import com.ue.data.search.IInderer;
 
-public class Indexer3 implements IInderer
+public class MultiIndexer implements IInderer
 {
 	 // 配置管理类实例
     private static ConfManager cm = ConfManager.getInstance();
     
-    private static final String SETFLAG = "set";
-	
     IInderer m_indexer = null;
 
     Directory m_directory = null;
@@ -66,30 +61,21 @@ public class Indexer3 implements IInderer
     Properties m_properties;
 
     String m_strPath = "";
+    //多索引目录
+    String m_strPath1 = "";
+    String m_strPath2 = "";
+    String m_strPath3 = "";
 
-    public static Indexer3 newInstance(Properties properties) throws Exception
-    {
-        Indexer3 indexer = new Indexer3(properties);
-        File file = new File(cm.getPropValue(IndexConstant.NEWS_PATH) + File.separator + "segments.gen");
-        indexer.open(cm.getPropValue(IndexConstant.NEWS_PATH), !file.exists());
-        return indexer;
-    }
-
-    public Indexer3(Properties properties)
+    public MultiIndexer(Properties properties)
     {
         m_properties = properties;
     }
 
-    public Indexer3(String strPath, Properties properties)
-    {
-        if (strPath == null)
-            strPath = cm.getPropValue(IndexConstant.NEWS_PATH);
-//            strPath = Config.IndexPath;
-        m_strPath = strPath;
-        m_properties = properties;
-    }
+    public MultiIndexer() {
+		// TODO Auto-generated constructor stub
+	}
 
-    /*
+	/*
      * @see com.ue.data.search.IIndexer#close()
      */
     @SuppressWarnings("static-access")
@@ -132,6 +118,44 @@ public class Indexer3 implements IInderer
     /*
      * @see com.ue.data.search.IIndexer#open(java.lang.String, boolean)
      */
+    public void open(String strPathOne, String strPathTwo, String strPathThree, boolean bCreate) throws Exception
+    {
+    	m_strPath1 = strPathOne;
+        m_strPath2 = strPathTwo;
+        m_strPath3 = strPathThree;
+        m_strPath = StringHelper.isNullOrEmpty(m_strPath1)?(StringHelper.isNullOrEmpty(m_strPath2)? m_strPath3 : m_strPath2) : m_strPath1;
+        m_directory = FSDirectory.open(new File(m_strPath));
+        Analyzer luceneAnalyzer = new StandardAnalyzer(Version.LUCENE_CURRENT);
+
+        // 第一个参数是存放索引目录有FSDirectory（存储到磁盘上）和RAMDirectory（存储到内存中）， 第二个参数是使用的分词器，
+        // 第三个：true，建立全新的索引，false,建立增量索引，第四个是建立的索引的最大长度。
+        m_indexWriter = new IndexWriter(m_directory, luceneAnalyzer, bCreate, IndexWriter.MaxFieldLength.UNLIMITED);
+
+        // 索引合并因子
+        // SetMergeFactor（合并因子）
+        // SetMergeFactor是控制segment合并频率的，其决定了一个索引块中包括多少个文档，当硬盘上的索引块达到多少时，
+        // 将它们合并成一个较大的索引块。当MergeFactor值较大时，生成索引的速度较快。MergeFactor的默认值是10，建议在建立索引前将其设置的大一些。
+        m_indexWriter.setMergeFactor(100);
+        // SetMaxBufferedDocs（最大缓存文档数）
+        // SetMaxBufferedDocs是控制写入一个新的segment前内存中保存的document的数目，
+        // 设置较大的数目可以加快建索引速度，默认为10。
+        m_indexWriter.setMaxBufferedDocs(100);
+        // SetMaxMergeDocs（最大合并文档数）
+        // SetMaxMergeDocs是控制一个segment中可以保存的最大document数目，值较小有利于追加索引的速度，默认Integer.MAX_VALUE，无需修改。
+        // 在创建大量数据的索引时，我们会发现索引过程的瓶颈在于大量的磁盘操作，如果内存足够大的话，
+        // 我们应当尽量使用内存，而非硬盘。可以通过SetMaxBufferedDocs来调整，增大Lucene使用内存的次数。
+        m_indexWriter.setMaxMergeDocs(1000);
+        // SetUseCompoundFile这个方法可以使Lucene在创建索引库时，会合并多个 Segments 文件到一个.cfs中。
+        // 此方式有助于减少索引文件数量，对于将来搜索的效率有较大影响。
+        // 压缩存储（True则为复合索引格式）
+        m_indexWriter.setUseCompoundFile(true);
+
+        // m_indexWriter.optimize();// 对索引进行优化
+    }
+    
+    /*
+     * @see com.ue.data.search.IIndexer#open(java.lang.String, boolean)
+     */
     public void open(String strPath, boolean bCreate) throws Exception
     {
         m_strPath = strPath;
@@ -164,6 +188,30 @@ public class Indexer3 implements IInderer
         // m_indexWriter.optimize();// 对索引进行优化
     }
 
+    /*
+     * 获得目录
+     */
+    public Directory getDirectoryOne() throws Exception
+    {
+        return FSDirectory.open(new File(m_strPath1));
+    }
+    
+    /*
+     * 获得目录
+     */
+    public Directory getDirectoryTwo() throws Exception
+    {
+        return FSDirectory.open(new File(m_strPath2));
+    }
+    
+    /*
+     * 获得目录
+     */
+    public Directory getDirectoryThree() throws Exception
+    {
+        return FSDirectory.open(new File(m_strPath2));
+    }
+    
     /*
      * 获得目录
      */
@@ -254,7 +302,7 @@ public class Indexer3 implements IInderer
      * @return
      * @throws Exception
      */
-  public <T> DataGrid<List<T>> search(T object, String strQueryString, WonderSearchBasePO sbpo, List<T> resultList) throws Exception
+  public <T> DataGrid<List<T>> search(T object, String strQueryString, WonderSearchBasePO sbpo) throws Exception
   {
 	  /**
       Analyzer analyzer = new IKAnalyzer();
@@ -277,7 +325,7 @@ public class Indexer3 implements IInderer
           System.out.println((AttributeImpl) it.next());
       }
       */
-      return search(object, strQueryString, sbpo, null, resultList);
+      return search(object, strQueryString, sbpo, null);
   }
 
   /**
@@ -291,60 +339,45 @@ public class Indexer3 implements IInderer
    * @return
    */
   @SuppressWarnings("unchecked")
-public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sbpo, List<T> resultList)
+public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sbpo)
 {
 	  DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
 	  List<T> beanList = new ArrayList<T>();
-      IndexSearcher searcher = null;
+	  MultiSearcher searcher = null;
       try
       {
-    	  Directory directory = getDirectory();
-          searcher = new IndexSearcher(directory, true);
+//    	  Directory directoryOne = getDirectoryOne();
+//    	  Directory directoryTwo = getDirectoryTwo();
+//    	  Directory directoryThree = getDirectoryThree();
+//    	  //创建两个IndexSearcher，以实现在多个索引目录进行查询
+//    	  IndexSearcher searcherOne = new IndexSearcher(directoryOne, true);
+//    	  IndexSearcher searcherTwo = new IndexSearcher(directoryTwo, true);
+//    	  IndexSearcher searcherThree = new IndexSearcher(directoryThree, true);
+//    	  IndexSearcher[] searchers = { searcherOne, searcherTwo, searcherThree };
+    	  IndexSearcher[] searchers = new IndexSearcher[Integer.valueOf(cm.getPropValue(IndexConstant.CORP_INDEX_NUM))];
+    	  for (int i = 1; i <= searchers.length; i++) {
+    		  searchers[i]=new IndexSearcher(FSDirectory.open(new File(m_strPath+i)), true);
+		  }
+          //使用MultiSearcher进行多域搜索
+          searcher = new MultiSearcher(searchers);
           // 给定义的字段设置排序
           Sort sort = getFieldsSort(sbpo.getOrder_str());
           Class clazzT = object.getClass();
           if (query == null)
               query = new MatchAllDocsQuery();
               // 对索引中的字段进行查询
-          
-          	Date start00 = new Date();
-          
-	          TopDocs topDocs = searcher.search(query, null, sbpo.getOffset() + sbpo.getLimit(), sort);
-	          
-	          Date end00 = new Date();
-	          long counttimes00 = end00.getTime() - start00.getTime();
-			  DecimalFormat df00 = new DecimalFormat("0.00000");
-			  double miao00 = Double.parseDouble((counttimes00 / 1300.0) + "");
-			  String searchtimes00 = df00.format(miao00);
-			  System.out.println("search耗时:" + searchtimes00 + "秒");
-	          
+	          TopDocs topDocs = searcher.search(query, null, sbpo.getOffset()+sbpo.getLimit(), sort);
+	          // 获取总记录数
 	          dataGrid.setTotalElements(topDocs.totalHits);
 	          ScoreDoc[] scoreDocs = topDocs.scoreDocs;
-	          // limit == scoreDocs.length; 
-	          // 如果有多个分词，当前面的分词查询结果总数大于分页中每页显示的数目时，只需获取结果集数目，不需要获取结果集
-	          if (resultList.size() >= sbpo.getLimit()) {
-				  return dataGrid;
-	          }
-	          else if (scoreDocs.length > 0)
+              if (scoreDocs.length > 0)
 	          {
 	              Document document = searcher.doc(scoreDocs[0].doc);
-//	              java.text.NumberFormat format = java.text.NumberFormat.getNumberInstance();  
 	              // 获取需要查询的属性
-	              Date start = new Date();
 	              MapFieldSelector mapFieldSelector = getSearchFields(sbpo.getSearchFields(),clazzT);
-	              Date end = new Date();
-	              long counttimes = end.getTime() - start.getTime();
-	  			  DecimalFormat df = new DecimalFormat("0.00000");
-	  			  double miao = Double.parseDouble((counttimes / 1300.0) + "");
-	  			  String searchtimes = df.format(miao);
-	  			  System.out.println("查询getSearchFields:" + searchtimes + "秒");
-	  			  
-	  			   Date start22 = new Date();
 	              for (int i = sbpo.getOffset(); i < scoreDocs.length; i++)
 	              {
-//	            	  System.out.println("准确度为：" + format.format(scoreDocs[i].score * 100.0) + "%");
 	            	  // 获取document文档信息
-//	                  document = searcher.doc(scoreDocs[i].doc);
 	                  document = searcher.doc(scoreDocs[i].doc, mapFieldSelector);
 	                  JSONObject jsonObject = new JSONObject();
 	                  T o = (T)clazzT.newInstance();
@@ -353,18 +386,48 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
 	                	  String strField = fieldable.name();
 	                	  jsonObject.put(strField, document.get(strField));
 	                  }
+	                  // 将json数据转换为对应的bean对象
 	                  o = jsonToVO(o, jsonObject.toString());
 	                  beanList.add(o);
 	              }
-	              Date end22 = new Date();
-	              long counttimes22 = end22.getTime() - start22.getTime();
-	  			  DecimalFormat df22 = new DecimalFormat("0.00000");
-	  			  double miao22 = Double.parseDouble((counttimes22 / 1300.0) + "");
-	  			  String searchtimes22 = df22.format(miao22);
-	  			  System.out.println("循环结果集耗时:" + searchtimes22 + "秒");
 	             
 	          }
       }
+//      try
+//      {
+//    	  Directory directory = getDirectory();
+//          searcher = new IndexSearcher(directory, true);
+//          // 给定义的字段设置排序
+//          Sort sort = getFieldsSort(strSorts);
+//          Class clazzT = object.getClass();
+//          if (query == null)
+//              query = new MatchAllDocsQuery();
+//              // 对索引中的字段进行查询
+//	          TopDocs topDocs = searcher.search(query, null, limit, sort);
+//	          dataGrid.setTotalElements(topDocs.totalHits);
+//	          ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+//	          // limit == scoreDocs.length; 
+//              if (scoreDocs.length > 0)
+//	          {
+//	              Document document = searcher.doc(scoreDocs[0].doc);
+////	              java.text.NumberFormat format = java.text.NumberFormat.getNumberInstance();  
+//	              for (int i = offset; i < scoreDocs.length; i++)
+//	              {
+////	            	  System.out.println("准确度为：" + format.format(scoreDocs[i].score * 100.0) + "%");
+//	                  document = searcher.doc(scoreDocs[i].doc);
+//	                  JSONObject jsonObject = new JSONObject();
+//	                  T o = (T)clazzT.newInstance();
+//	                  for (Fieldable fieldable : document.getFields())
+//	                  {
+//	                	  String strField = fieldable.name();
+//	                	  jsonObject.put(strField, document.get(strField));
+//	                  }
+//	                  o = jsonToVO(o, jsonObject.toString());
+//	                  beanList.add(o);
+//	              }
+//	             
+//	          }
+//      }
       catch (Exception e)
       {
           e.printStackTrace();
@@ -420,7 +483,7 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
   }
   
   /**
-	 * 将json转换为resumeVo
+	 * 将json转换为对应的bean对象
 	 * @param json
  * @return 
 	 * @return
@@ -508,87 +571,6 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
             return SortField.STRING;
     }
     
-    /**
-     * 给Object对象中指定的属性设置值
-     * @param obj
-     * @param propertyName
-     * @param value
-     * @throws IntrospectionException
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     */
-	private static void setProperties(Object obj, String propertyName,
-			Object value) throws IntrospectionException,
-			IllegalAccessException, InvocationTargetException {
-		// 机制是看有没有属性propertyName的get和set方法
-		PropertyDescriptor pd = new PropertyDescriptor(propertyName,obj.getClass());
-		Method methodSetX = pd.getWriteMethod();
-		methodSetX.invoke(obj,value);
-	}
-	
-	/**
-	 * 从Object对象中取出指定属性的值
-	 * @param obj
-	 * @param propertyName
-	 * @return
-	 * @throws IntrospectionException
-	 * @throws IllegalAccessException
-	 * @throws InvocationTargetException
-	 */
-	private static Object getProperty(Object obj, String propertyName)
-			throws IntrospectionException, IllegalAccessException,
-			InvocationTargetException {
-		BeanInfo beanInfo =  Introspector.getBeanInfo(obj.getClass());
-		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-		Object retVal = null;
-		for(PropertyDescriptor pd : pds){
-			if(pd.getName().equalsIgnoreCase(propertyName))
-			{
-				Method methodGetX = pd.getReadMethod();
-				retVal = methodGetX.invoke(obj);
-				break;
-			}
-		}
-		return retVal;
-	}
-    
-    /**
-     * 获取bean中所有setter方法
-     * @param clazz
-     * @return
-     */
-    @SuppressWarnings("rawtypes")
-	private List<Method> getSetterMethodList(Class clazz)
-    {
-    	Class clazzT = clazz;  
-  	    Method[] methods = clazzT.getMethods();//获得bean的方法      
-  	    List<Method> setterMethodList = new ArrayList<Method>();//构造一个List用来存放bean中所有set开头的方法      
-  	  
-  	    //获得Bean中所有set方法      
-  	    for (Method method : methods) {  
-  	        if (method.getName().startsWith(SETFLAG)) {  
-  	            setterMethodList.add(method);  
-  	        }  
-  	    }  
-  	    return setterMethodList;
-    }
-    
-    /**
-     * 获取字段的类型
-     * @param propertyName
-     * @param clazz
-     * @return
-     * @throws IntrospectionException
-     */
-    @SuppressWarnings({ "rawtypes", "unused" })
-	public static Class findPropertyType(String propertyName, Class clazz) throws IntrospectionException
-	{
-	   PropertyDescriptor pd = new PropertyDescriptor(propertyName, clazz);
-	   if (pd != null)
-	     return pd.getPropertyType();
-	   else
-	     return Object.class;
-	 }
 
     /**
      * <搜索处理方法>
@@ -605,7 +587,7 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
      * @see [类、类#方法、类#成员]
      */
     
-	  public <T> DataGrid<List<T>> search(T object, String strQueryString, WonderSearchBasePO sbpo, Analyzer analyzer, List<T> resultList)
+	  public <T> DataGrid<List<T>> search(T object, String strQueryString, WonderSearchBasePO sbpo, Analyzer analyzer)
 	  throws Exception
 	  {
 		
@@ -627,8 +609,7 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
 			  // 用创建的分词器对关键字querystring分词,然后对索引中的content字段进行查询
 			  query = queryParser.parse(strQueryString); 
 			}
-			return search(object, query, sbpo, resultList);
+			return search(object, query, sbpo);
 	 }
-  
 	  
 }

@@ -16,6 +16,8 @@ public class DictionaryManager
     private static DictionarySet m_dicAreas = new DictionarySet();
 
     private static DictionarySet m_dicPositions = new DictionarySet();
+    
+    private static DictionarySet m_dicCorpKeyWord = new DictionarySet();
 
     private static DictionarySet m_dicIndustrys = new DictionarySet();
 
@@ -26,6 +28,7 @@ public class DictionaryManager
         // loadSet(m_dicNumbers,strBasePath + "numbers.dic");
         // loadMap(m_dicAreas,strBasePath + "areas.dic");
         loadMap(m_dicPositions, strBasePath + "positions.dic");
+        loadMap(m_dicCorpKeyWord, strBasePath + "ext_corpkeyword.dic");
         // loadMap(m_dicIndustrys,strBasePath + "industrys.dic");
         // DataTable dtAreas =
         // DBManager.getDataTable("select name from t_areainfo");
@@ -43,9 +46,15 @@ public class DictionaryManager
         // addWord(m_dicIndustrys,row.getString("domainName"));
         // }
         //
-        m_all.addAll(m_dicAreas);
+//        m_all.addAll(m_dicAreas);
         m_all.addAll(m_dicPositions);
-        m_all.addAll(m_dicIndustrys);
+        m_all.addAll(m_dicCorpKeyWord);
+//        m_all.addAll(m_dicIndustrys);
+    }
+    
+    public static DictionarySet getCorpKeyWord()
+    {
+    	return m_dicCorpKeyWord;
     }
 
     public static DictionarySet getNumbers()

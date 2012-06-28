@@ -22,14 +22,14 @@ import self.wonder.search.Indexer;
 import com.util.LogHelper;
 import com.util.page.PageableResultDataImpl;
 
-public class PostInfoSearch extends HttpServlet {
+public class CorpInfoSearch extends HttpServlet {
 
 	private static final long serialVersionUID = -3420236962803678596L;
 
 	// 配置管理类实例
 	private static ConfManager cm = ConfManager.getInstance();
 
-	public PostInfoSearch() {
+	public CorpInfoSearch() {
 		super();
 	}
 
@@ -49,13 +49,13 @@ public class PostInfoSearch extends HttpServlet {
 		RequestDispatcher rd = null;
 		request.setCharacterEncoding("UTF-8");
 		response.setCharacterEncoding("UTF-8");
-		String searchKey = request.getParameter("searchKey");// 从主页传过来的，以后回传也用这个
+		String corpSearchKey = request.getParameter("corpSearchKey");// 从主页传过来的，以后回传也用这个
 
-		if (StringHelper.isNullOrEmpty(searchKey)) {
-			searchKey = new String(request.getParameter("qc").getBytes("ISO-8859-1"),
+		if (StringHelper.isNullOrEmpty(corpSearchKey)) {
+			corpSearchKey = new String(request.getParameter("qc").getBytes("ISO-8859-1"),
 					"UTF-8");
 		}
-		System.out.print("搜索的关键字：" + searchKey);
+		System.out.print("搜索的关键字：" + corpSearchKey);
 		int offset = 0;// 从主页传过来的，以后回传也用这个
 		int pagersize = 10;// 从主页传过来的，以后回传也用这个
 
@@ -66,18 +66,17 @@ public class PostInfoSearch extends HttpServlet {
 
 		try {
 			WonderSearchBasePO sbpo = new WonderSearchBasePO();
-			sbpo.setParam("key", searchKey);
-			sbpo.setParam("type", "name");
-//			sbpo.setOrder_str("lastCrawlDate desc");
+			sbpo.setParam("key", corpSearchKey);
+			sbpo.setParam("type", "corpName");
 			sbpo.setOffset(offset);
 			sbpo.setLimit(pagersize);
 			
 			//WonderSearchBasePO中增加定制查询指定字段信息属性searchFileds
-//			String[] searchFields = {"name","area","workYear"};
-//			sbpo.setSearchFields(searchFields);
+			String[] searchFields = {"name","size","type"};
+			sbpo.setSearchFields(searchFields);
 			
 			Date start = new Date();
-			DataGrid<List<PostBO>> dataGrid = getDataKeyAnalysis(new PostBO(), sbpo);
+			DataGrid<List<CorpBO>> dataGrid = getDataKeyAnalysis(new CorpBO(), sbpo);
 			Date end = new Date();
 
 			long counttimes = end.getTime() - start.getTime();
@@ -86,13 +85,13 @@ public class PostInfoSearch extends HttpServlet {
 			String searchtimes = df.format(miao);
 			System.out.println("查询:" + searchtimes + "秒");
 			request.setAttribute("searchTimes", searchtimes);
-			request.setAttribute("searchKey", searchKey);
+			request.setAttribute("corpSearchKey", corpSearchKey);
 			request.setAttribute("dataGrid", dataGrid);
 			request.setAttribute("totalRecord", dataGrid.getTotalElements());
 			request.setAttribute("currBeginRecord", offset+1);
 			request.setAttribute("currEndRecord", offset+pagersize);
-			request.setAttribute("postList", dataGrid.getData());
-			rd = request.getRequestDispatcher("./postSearchResults.jsp");
+			request.setAttribute("corpList", dataGrid.getData());
+			rd = request.getRequestDispatcher("./corpSearchResults.jsp");
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -115,7 +114,7 @@ public class PostInfoSearch extends HttpServlet {
         ArrayList<String> words = KeyAnalysisSupport.analysePostSearchKey(sbpo);
         // 总记录数
         int lngRowCount = 0;
-        Indexer3 indexer = new Indexer3(cm.getPropValue(IndexConstant.POST_PATH), null);
+        MultiIndexer indexer = new MultiIndexer();
         DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
         try
         {
@@ -123,7 +122,7 @@ public class PostInfoSearch extends HttpServlet {
             for (String word : words)
             {
                 LogHelper.getLogger().info("sbWhere=======  " + word);
-                dataGrid = indexer.search(object, word, sbpo,resultList);
+                dataGrid = indexer.search(object, word, sbpo);
 
                 if (dataGrid.getData() !=null && dataGrid.getData().size() > 0)
                 {

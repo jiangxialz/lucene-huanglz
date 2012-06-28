@@ -26,6 +26,16 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j
 	</servlet-mapping>
 	
 	<servlet>
+		<servlet-name>CorpInfoSearch</servlet-name>
+		<servlet-class>self.wonder.search.CorpInfoSearch</servlet-class>
+	</servlet>
+	
+	<servlet-mapping>
+		<servlet-name>CorpInfoSearch</servlet-name>
+		<url-pattern>/CorpInfoSearch</url-pattern>
+	</servlet-mapping>
+	
+	<servlet>
 		<servlet-name>SearchController</servlet-name>
 		<servlet-class>sample.dw.paper.lucene.servlet.SearchController</servlet-class>
 	</servlet>

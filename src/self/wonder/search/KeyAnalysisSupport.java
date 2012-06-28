@@ -23,7 +23,7 @@ public class KeyAnalysisSupport {
 	 * @param sbpo
 	 */
 	@SuppressWarnings("rawtypes")
-	public static ArrayList<String> analysePostSearchKey(SearchBasePO sbpo) {
+	public static ArrayList<String> analysePostSearchKey(WonderSearchBasePO sbpo) {
 		
 		// 搜索关键字
 		String keyString = (String) sbpo.getParam("key");
