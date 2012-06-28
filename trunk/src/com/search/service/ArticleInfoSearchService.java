@@ -19,6 +19,7 @@ import com.search.support.KeyAnalysisSupport;
 import com.ue.data.search.indexer.lucene.Indexer;
 import com.ue.data.search.indexer.lucene.Indexer2;
 import com.ue.data.search.indexer.lucene.Indexer3;
+import com.ue.data.search.indexer.lucene.MultiIndexer;
 import com.util.LogHelper;
 import com.util.page.PageableResultDataImpl;
 
@@ -257,6 +258,70 @@ public class ArticleInfoSearchService
         return dataGrid;
 	}
 	
+	public static <T> DataGrid<List<T>> getDataKeyAnalysisByMultiSearch(T object,SearchBasePO sbpo)
+	{
+		List<T> resultList = new ArrayList<T>();
+		 // 建立搜索条件
+        ArrayList<String> words = KeyAnalysisSupport.analysePostSearchKey(sbpo);
+        // 总记录数
+        int lngRowCount = 0;
+        MultiIndexer indexer = new MultiIndexer();
+        DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
+        try
+        {
+            // 搜索各分词结果
+            for (String word : words)
+            {
+                LogHelper.getLogger().info("sbWhere=======  " + word);
+                dataGrid = indexer.search(object, word, sbpo.getOffset(), sbpo.getOffset() + sbpo.getLimit(), sbpo.getOrder_str());
+
+//                if (dataGrid.getTotalElements()<=0) 
+//                {
+//                	DataGrid<List<T>> dataGrid_2 =  indexer.search(object, word, 0, 1, null);
+//					dataGrid.setTotalElements(dataGrid_2.getTotalElements());
+//				}
+                if (dataGrid.getData().size() > 0)
+                {
+                    sbpo.setOffset(0);
+                    /** 第一个分词结果集大于5条的话只取第一个分词结果集前5条记录；如果小于5，取第一
+                                                                分词结果集n条记录(n<5)+第二个分词结果集的前5-n条记录
+                    */
+                    for (int i = 0; sbpo.getLimit() - resultList.size() > 0 && i < dataGrid.getData().size(); i++)
+                    {
+                    	object = (T) dataGrid.getData().get(i);
+                    	resultList.add(object);
+//                    	String strID = ((T) object).getId();
+////                    	String strID = dt.getRow(i).getString("ID");
+//                        if (!ids.contains(strID))
+//                        {   // 判断重复
+//                        	resultList.add(object);
+//                            ids.add(strID);
+//                        }
+//                        else
+//                        {
+//                            lngRowCount--;
+//                        }
+                    }
+                }
+                else
+                {
+                    sbpo.setOffset(sbpo.getOffset() - dataGrid.getTotalElements());
+                    if (sbpo.getOffset() < 0)
+                        sbpo.setOffset(0);
+                }
+                // 总记录
+                lngRowCount += dataGrid.getTotalElements();
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        dataGrid.setData(resultList);
+        dataGrid.setTotalElements(lngRowCount);
+        return dataGrid;
+	}
+	
 	
 	/**
 	public static <T> DataGrid<List> getDataKeyAnalysis3(T object, SearchBasePO sbpo)
@@ -334,6 +399,7 @@ public class ArticleInfoSearchService
 //		sbpo.setParamStr(paramStr);
 		sbpo.setParam("key", "软件开发工程师");
 		sbpo.setParam("type", "title");
+		sbpo.setOrder_str("type desc");
 //        ArticlePO article = new ArticlePO();
 
 //        PageableResultDataImpl<List<ArticlePO>> dataGrid = getData(article, sbpo);
@@ -349,7 +415,8 @@ public class ArticleInfoSearchService
 //				System.out.println("id : "+ articlePO.getId()+ " title :"+articlePO.getTitle()+ " content :"+articlePO.getContent()+ " IntCreateTime : " + articlePO.getIntCreateTime()+" author : " + articlePO.getAuthor()+" type : " + articlePO.getType());
 //			}
 //        }
-        DataGrid<List<ArticlePO>> dataGrid = getDataKeyAnalysisStr2(new ArticlePO(),sbpo);
+//        DataGrid<List<ArticlePO>> dataGrid = getDataKeyAnalysisStr2(new ArticlePO(),sbpo);
+        DataGrid<List<ArticlePO>> dataGrid = getDataKeyAnalysisByMultiSearch(new ArticlePO(),sbpo);
 //        DataGrid<List<ArticlePO>> dataGrid = getDataKeyAnalysisStr(new ArticlePO(),sbpo);
         System.out.println(dataGrid.getTotalElements());
         if (null !=dataGrid && dataGrid.getTotalElements() > 0) 

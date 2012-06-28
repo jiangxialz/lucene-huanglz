@@ -71,10 +71,10 @@
 			<TR>
 				<TD noWrap>&nbsp;&nbsp;&nbsp;<STRONG>推荐&nbsp;:&nbsp;</STRONG><A
 					style="COLOR: #000000"
-					onclick="h(this,'http://localhost:8088/luceneTest/searchjsp/index.jsp')"
+					onclick="h(this,'http://localhost:8081/luceneTest/searchjsp/index.jsp')"
 					href="">设为主页 </A>
 				</TD>
-				<TD noWrap align=right>找到相关记录约<%=totalRecord%>条，当前第<%=currBeginRecord%>-<%=currEndRecord %>条记录，用时<%=searchTimes%>秒</TD>
+				<TD noWrap align=right>找到相关记录<%=totalRecord%>条，当前第<%=currBeginRecord%>-<%=currEndRecord %>条记录，用时<%=searchTimes%>秒</TD>
 			</TR>
 		</TBODY>
 	</TABLE>
@@ -97,40 +97,23 @@
 			</TR>
 		</TBODY>
 	</TABLE>
-	
-
-			  <c:choose>
-					<c:when test="${!empty postList}">
-						<c:forEach items="${postList}" var="postBO">
-						<TABLE id=2 border=0 cellSpacing=0 cellPadding=0>
-						<TBODY>
-							<TR>	
-						    <TD class=f><FONT size=3>${postBO.ID}&nbsp;&nbsp;&nbsp;${postBO.name}</FONT>
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<FONT size=-1>${postBO.area}</FONT>
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<FONT size=-1>${postBO.workYear}</FONT><BR>
-									<FONT color=#008000 size=-1> 
-									<%--
-									<c:set value="${postBO.description}" var="postDesciption" />
-										<%
-										String postDesciption = <c:out/>
-										postDesciption = StringHelper.replaceHtml(postDesciption);
-										 	//temppost = temppost.substring(0, 200);
-										 %> 
-			                             <%=postDesciption%> 
-									
-									 --%>
-									 <BR>
-							</FONT>
-							</TD>
-						</TR>
-						</TBODY>
-					</TABLE>
-					<BR>
-						</c:forEach>
-					</c:when>
-			 </c:choose>
-
-	
+	<%
+		for (PostBO post : postList) {
+	%>
+	<TABLE id=2 border=0 cellSpacing=0 cellPadding=0>
+		<TBODY>
+			<TR>
+				<TD class=f><FONT size=3><%=post.getID()%>&nbsp;&nbsp;&nbsp;<%=post.getName()%></FONT>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<FONT size=-1><%=post.getArea()%></FONT>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<FONT size=-1><%=post.getWorkYear()%></FONT><BR>
+						<FONT color=#008000 size=-1> 
+							<%
+					 			String postDesciption = post.getDescription();
+							    postDesciption = StringHelper.replaceHtml(postDesciption);
+							 	//temppost = temppost.substring(0, 200);
+							 %> <%=postDesciption%> 
+						<BR>
+				</FONT>
 				<%-- 
 					<p class="c overflow-all">
 						<cite>职位描述：</cite><q id="job<%=i %>">
@@ -176,7 +159,14 @@
 						}
 						</script>
 				 --%>
-				
+				</TD>
+			</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<%
+		}
+	%>
 	<DIV class=p>
 		<pg:pager url="./PostInfoSearch" items="${totalRecord}"
 			export="currentPageNumber=pageNumber" maxPageItems="10">

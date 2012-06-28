@@ -1,4 +1,4 @@
-package self.wonder.search;
+package com.ue.data.search.indexer.lucene;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -8,10 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -26,13 +24,13 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
-import org.apache.lucene.document.MapFieldSelector;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.MultiSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
@@ -50,7 +48,7 @@ import com.constants.IndexConstant;
 import com.search.po.DataGrid;
 import com.ue.data.search.IInderer;
 
-public class Indexer3 implements IInderer
+public class MultiIndexer implements IInderer
 {
 	 // 配置管理类实例
     private static ConfManager cm = ConfManager.getInstance();
@@ -67,20 +65,20 @@ public class Indexer3 implements IInderer
 
     String m_strPath = "";
 
-    public static Indexer3 newInstance(Properties properties) throws Exception
+    public static MultiIndexer newInstance(Properties properties) throws Exception
     {
-        Indexer3 indexer = new Indexer3(properties);
+        MultiIndexer indexer = new MultiIndexer(properties);
         File file = new File(cm.getPropValue(IndexConstant.NEWS_PATH) + File.separator + "segments.gen");
         indexer.open(cm.getPropValue(IndexConstant.NEWS_PATH), !file.exists());
         return indexer;
     }
 
-    public Indexer3(Properties properties)
+    public MultiIndexer(Properties properties)
     {
         m_properties = properties;
     }
 
-    public Indexer3(String strPath, Properties properties)
+    public MultiIndexer(String strPath, Properties properties)
     {
         if (strPath == null)
             strPath = cm.getPropValue(IndexConstant.NEWS_PATH);
@@ -89,7 +87,11 @@ public class Indexer3 implements IInderer
         m_properties = properties;
     }
 
-    /*
+    public MultiIndexer() {
+		// TODO Auto-generated constructor stub
+	}
+
+	/*
      * @see com.ue.data.search.IIndexer#close()
      */
     @SuppressWarnings("static-access")
@@ -254,7 +256,7 @@ public class Indexer3 implements IInderer
      * @return
      * @throws Exception
      */
-  public <T> DataGrid<List<T>> search(T object, String strQueryString, WonderSearchBasePO sbpo, List<T> resultList) throws Exception
+  public <T> DataGrid<List<T>> search(T object, String strQueryString, int offset, int limit, String strSorts) throws Exception
   {
 	  /**
       Analyzer analyzer = new IKAnalyzer();
@@ -277,7 +279,7 @@ public class Indexer3 implements IInderer
           System.out.println((AttributeImpl) it.next());
       }
       */
-      return search(object, strQueryString, sbpo, null, resultList);
+      return search(object, strQueryString, offset, limit, strSorts, null);
   }
 
   /**
@@ -291,61 +293,41 @@ public class Indexer3 implements IInderer
    * @return
    */
   @SuppressWarnings("unchecked")
-public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sbpo, List<T> resultList)
+public <T> DataGrid<List<T>> search(T object, Query query, int offset, int limit, String strSorts)
 {
 	  DataGrid<List<T>> dataGrid = new DataGrid<List<T>>();
 	  List<T> beanList = new ArrayList<T>();
-      IndexSearcher searcher = null;
+//      IndexSearcher searcher = null;
+	  MultiSearcher searcher = null;
       try
       {
-    	  Directory directory = getDirectory();
-          searcher = new IndexSearcher(directory, true);
+//    	  Directory directory = getDirectory();
+    	  //创建两个IndexSearcher，以实现在多个索引目录进行查询
+    	  Directory directory1 = FSDirectory.open(new File(cm.getPropValue(IndexConstant.NEWS_PATH1)));
+    	  IndexSearcher searcher1 = new IndexSearcher(directory1, true);
+    	  Directory directory2 = FSDirectory.open(new File(cm.getPropValue(IndexConstant.NEWS_PATH2)));
+    	  IndexSearcher searcher2 = new IndexSearcher(directory2, true);
+    	  IndexSearcher[] searchers = { searcher1, searcher2 };
+          //使用MultiSearcher进行多域搜索
+          searcher = new MultiSearcher(searchers);
           // 给定义的字段设置排序
-          Sort sort = getFieldsSort(sbpo.getOrder_str());
+          Sort sort = getFieldsSort(strSorts);
           Class clazzT = object.getClass();
           if (query == null)
               query = new MatchAllDocsQuery();
               // 对索引中的字段进行查询
-          
-          	Date start00 = new Date();
-          
-	          TopDocs topDocs = searcher.search(query, null, sbpo.getOffset() + sbpo.getLimit(), sort);
-	          
-	          Date end00 = new Date();
-	          long counttimes00 = end00.getTime() - start00.getTime();
-			  DecimalFormat df00 = new DecimalFormat("0.00000");
-			  double miao00 = Double.parseDouble((counttimes00 / 1300.0) + "");
-			  String searchtimes00 = df00.format(miao00);
-			  System.out.println("search耗时:" + searchtimes00 + "秒");
-	          
+	          TopDocs topDocs = searcher.search(query, null, limit, sort);
 	          dataGrid.setTotalElements(topDocs.totalHits);
 	          ScoreDoc[] scoreDocs = topDocs.scoreDocs;
 	          // limit == scoreDocs.length; 
-	          // 如果有多个分词，当前面的分词查询结果总数大于分页中每页显示的数目时，只需获取结果集数目，不需要获取结果集
-	          if (resultList.size() >= sbpo.getLimit()) {
-				  return dataGrid;
-	          }
-	          else if (scoreDocs.length > 0)
+              if (scoreDocs.length > 0)
 	          {
 	              Document document = searcher.doc(scoreDocs[0].doc);
 //	              java.text.NumberFormat format = java.text.NumberFormat.getNumberInstance();  
-	              // 获取需要查询的属性
-	              Date start = new Date();
-	              MapFieldSelector mapFieldSelector = getSearchFields(sbpo.getSearchFields(),clazzT);
-	              Date end = new Date();
-	              long counttimes = end.getTime() - start.getTime();
-	  			  DecimalFormat df = new DecimalFormat("0.00000");
-	  			  double miao = Double.parseDouble((counttimes / 1300.0) + "");
-	  			  String searchtimes = df.format(miao);
-	  			  System.out.println("查询getSearchFields:" + searchtimes + "秒");
-	  			  
-	  			   Date start22 = new Date();
-	              for (int i = sbpo.getOffset(); i < scoreDocs.length; i++)
+	              for (int i = offset; i < scoreDocs.length; i++)
 	              {
 //	            	  System.out.println("准确度为：" + format.format(scoreDocs[i].score * 100.0) + "%");
-	            	  // 获取document文档信息
-//	                  document = searcher.doc(scoreDocs[i].doc);
-	                  document = searcher.doc(scoreDocs[i].doc, mapFieldSelector);
+	                  document = searcher.doc(scoreDocs[i].doc);
 	                  JSONObject jsonObject = new JSONObject();
 	                  T o = (T)clazzT.newInstance();
 	                  for (Fieldable fieldable : document.getFields())
@@ -356,15 +338,44 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
 	                  o = jsonToVO(o, jsonObject.toString());
 	                  beanList.add(o);
 	              }
-	              Date end22 = new Date();
-	              long counttimes22 = end22.getTime() - start22.getTime();
-	  			  DecimalFormat df22 = new DecimalFormat("0.00000");
-	  			  double miao22 = Double.parseDouble((counttimes22 / 1300.0) + "");
-	  			  String searchtimes22 = df22.format(miao22);
-	  			  System.out.println("循环结果集耗时:" + searchtimes22 + "秒");
 	             
 	          }
       }
+//      try
+//      {
+//    	  Directory directory = getDirectory();
+//          searcher = new IndexSearcher(directory, true);
+//          // 给定义的字段设置排序
+//          Sort sort = getFieldsSort(strSorts);
+//          Class clazzT = object.getClass();
+//          if (query == null)
+//              query = new MatchAllDocsQuery();
+//              // 对索引中的字段进行查询
+//	          TopDocs topDocs = searcher.search(query, null, limit, sort);
+//	          dataGrid.setTotalElements(topDocs.totalHits);
+//	          ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+//	          // limit == scoreDocs.length; 
+//              if (scoreDocs.length > 0)
+//	          {
+//	              Document document = searcher.doc(scoreDocs[0].doc);
+////	              java.text.NumberFormat format = java.text.NumberFormat.getNumberInstance();  
+//	              for (int i = offset; i < scoreDocs.length; i++)
+//	              {
+////	            	  System.out.println("准确度为：" + format.format(scoreDocs[i].score * 100.0) + "%");
+//	                  document = searcher.doc(scoreDocs[i].doc);
+//	                  JSONObject jsonObject = new JSONObject();
+//	                  T o = (T)clazzT.newInstance();
+//	                  for (Fieldable fieldable : document.getFields())
+//	                  {
+//	                	  String strField = fieldable.name();
+//	                	  jsonObject.put(strField, document.get(strField));
+//	                  }
+//	                  o = jsonToVO(o, jsonObject.toString());
+//	                  beanList.add(o);
+//	              }
+//	             
+//	          }
+//      }
       catch (Exception e)
       {
           e.printStackTrace();
@@ -385,38 +396,6 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
       }
       dataGrid.setData(beanList);
       return dataGrid;
-  }
-  
-  /**
-   * <获取查询的属性>
-   * <功能详细描述>
-   * @param searchFields
-   * @param clazz
-   * @return [参数说明]
-   * 
-   * @return MapFieldSelector [返回类型说明]
-   * @exception throws [违例类型] [违例说明]
-   * @see [类、类#方法、类#成员]
-   */
-  public  MapFieldSelector getSearchFields(String[] searchFields, Class clazz){
-      MapFieldSelector mapFieldSelector = null;
-	  try {
-		  // 如果设置了要查询的属性则返回要查询的,否则返回整个bean对象包含的属性
-		  if (StringHelper.isNullOrEmpty(searchFields)) {
-			  BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-			  PropertyDescriptor[] pr = beanInfo.getPropertyDescriptors();
-			  List<String> list = new ArrayList<String>();
-			  for(int i=0 ; i<pr.length ; i++){
-				  list.add(pr[i].getName());
-			  }		
-			  mapFieldSelector = new MapFieldSelector(list);
-		  }else {
-			  mapFieldSelector = new MapFieldSelector(searchFields);
-		  }
-	  } catch (IntrospectionException e) {
-		e.printStackTrace();
-	  }
-	  return mapFieldSelector;
   }
   
   /**
@@ -605,7 +584,7 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
      * @see [类、类#方法、类#成员]
      */
     
-	  public <T> DataGrid<List<T>> search(T object, String strQueryString, WonderSearchBasePO sbpo, Analyzer analyzer, List<T> resultList)
+	  public <T> DataGrid<List<T>> search(T object, String strQueryString, int offset, int limit, String strSorts, Analyzer analyzer)
 	  throws Exception
 	  {
 		
@@ -627,8 +606,25 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
 			  // 用创建的分词器对关键字querystring分词,然后对索引中的content字段进行查询
 			  query = queryParser.parse(strQueryString); 
 			}
-			return search(object, query, sbpo, resultList);
+			return search(object, query, offset, limit, strSorts);
 	 }
-  
+    
+/**
+    public DataTable search(String strSQL, String strQueryString, int offset, int limit, String strOrders)
+            throws Exception
+    {
+        DataTable dt_1 = search(strQueryString, offset, limit, strOrders);
+        String strIDs = "";
+        for (DataRow row : dt_1.getRows())
+        {
+            strIDs = StringHelper.linkString(strIDs, ",", row.getString("ID"));
+        }
+        if (strSQL.indexOf("?ID") > 0)
+            strSQL = strSQL.replace("?ID", strIDs);
+        else
+            strSQL += " where ID in (" + strIDs + ")";
+        return DBManager.getDataTable(strSQL);
+    }
+*/
 	  
 }

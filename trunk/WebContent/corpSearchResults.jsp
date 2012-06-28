@@ -18,12 +18,12 @@
 </SCRIPT>
 <META name=GENERATOR content="MSHTML 8.00.6001.18904">
 <%
-	List<PostBO> postList = (List<PostBO>) request.getAttribute("postList");
+	List<CorpBO> corpList = (List<CorpBO>) request.getAttribute("corpList");
 	int totalRecord = (Integer) request.getAttribute("totalRecord");
 	int currBeginRecord = (Integer) request.getAttribute("currBeginRecord");
 	int currEndRecord = (Integer) request.getAttribute("currEndRecord");
 	String searchTimes = (String) request.getAttribute("searchTimes");
-	String searchKey = (String) request.getAttribute("searchKey");
+	String corpSearchKey = (String) request.getAttribute("corpSearchKey");
 %>
 
 </HEAD>
@@ -48,10 +48,10 @@
 						<TBODY>
 							<TR>
 								<TD vAlign=top noWrap>
-									<FORM name=f action="./PostInfoSearch" method="post">
+									<FORM name=f action="./CorpInfoSearch" method="post">
 										<INPUT value=8 type=hidden name=f> <INPUT id=kw
-											class=i value=<%=searchKey%> maxLength=100 size=46
-											name=searchKey> <INPUT class=btn value=开始搜索
+											class=i value=<%=corpSearchKey%> maxLength=100 size=46
+											name=corpSearchKey> <INPUT class=btn value=开始搜索
 											type=submit>
 									</FORM>
 								</TD>
@@ -97,40 +97,23 @@
 			</TR>
 		</TBODY>
 	</TABLE>
-	
-
-			  <c:choose>
-					<c:when test="${!empty postList}">
-						<c:forEach items="${postList}" var="postBO">
-						<TABLE id=2 border=0 cellSpacing=0 cellPadding=0>
-						<TBODY>
-							<TR>	
-						    <TD class=f><FONT size=3>${postBO.ID}&nbsp;&nbsp;&nbsp;${postBO.name}</FONT>
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<FONT size=-1>${postBO.area}</FONT>
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<FONT size=-1>${postBO.workYear}</FONT><BR>
-									<FONT color=#008000 size=-1> 
-									<%--
-									<c:set value="${postBO.description}" var="postDesciption" />
-										<%
-										String postDesciption = <c:out/>
-										postDesciption = StringHelper.replaceHtml(postDesciption);
-										 	//temppost = temppost.substring(0, 200);
-										 %> 
-			                             <%=postDesciption%> 
-									
-									 --%>
-									 <BR>
-							</FONT>
-							</TD>
-						</TR>
-						</TBODY>
-					</TABLE>
-					<BR>
-						</c:forEach>
-					</c:when>
-			 </c:choose>
-
-	
+	<%
+		for (CorpBO corp : corpList) {
+	%>
+	<TABLE id=2 border=0 cellSpacing=0 cellPadding=0>
+		<TBODY>
+			<TR>
+				<TD class=f><FONT size=3><%=post.getID()%>&nbsp;&nbsp;&nbsp;<%=corp.getName()%></FONT>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<FONT size=-1><%=corp.getType()%></FONT>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<FONT size=-1><%=corp.getDomain()%></FONT><BR>
+						<FONT color=#008000 size=-1> 
+							<%
+					 			String corpDesciption = corp.getDescription();
+							    corpDesciption = StringHelper.replaceHtml(corpDesciption);
+							 	//temppost = temppost.substring(0, 200);
+							 %> <%=corpDesciption%> 
+						<BR>
+				</FONT>
 				<%-- 
 					<p class="c overflow-all">
 						<cite>职位描述：</cite><q id="job<%=i %>">
@@ -176,16 +159,23 @@
 						}
 						</script>
 				 --%>
-				
+				</TD>
+			</TR>
+		</TBODY>
+	</TABLE>
+	<BR>
+	<%
+		}
+	%>
 	<DIV class=p>
-		<pg:pager url="./PostInfoSearch" items="${totalRecord}"
+		<pg:pager url="./CorpInfoSearch" items="${totalRecord}"
 			export="currentPageNumber=pageNumber" maxPageItems="10">
 			<pg:param name="qc" value="<%=searchKey %>" />
 			<pg:first>
-				<a href="${pageUrl}">首页</a>
+				<a href="${pageUrl}"> < </a>
 			</pg:first>
 			<pg:prev>
-				<a href="${pageUrl }">上一页</a>
+				<a href="${pageUrl }"> << </a>
 			</pg:prev>
 			<pg:pages>
 				<c:choose>
@@ -198,10 +188,10 @@
 				</c:choose>
 			</pg:pages>
 			<pg:next>
-				<a href="${pageUrl }">下一页</a>
+				<a href="${pageUrl }"> > </a>
 			</pg:next>
 			<pg:last>
-				<a href="${pageUrl }">尾页</a>
+				<a href="${pageUrl }"> >> </a>
 			</pg:last>
 		</pg:pager>
 	</DIV>

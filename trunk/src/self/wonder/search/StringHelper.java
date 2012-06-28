@@ -24,11 +24,13 @@ public class StringHelper
     
     public static String replaceHtml(String input) 
     {
-      input = input.replaceAll("&lt;br/&gt;", "<br/>");
-      input = input.replaceAll("&lt;br/&gt;", "<BR/>");
-      input = input.replaceAll("&lt;br&gt;", "<BR>");
-      input = input.replaceAll("&lt;br&gt;", "<br>");
-      return input; 
+    	if (StringHelper.isNotNullAndEmpty(input)) {
+		 	input = input.replaceAll("&lt;br/&gt;", "<br/>");
+	        input = input.replaceAll("&lt;br/&gt;", "<BR/>");
+	        input = input.replaceAll("&lt;br&gt;", "<BR>");
+	        input = input.replaceAll("&lt;br&gt;", "<br>");
+		}
+    	return input; 
     }
 
 //    public static boolean isNumeric(String s)
