@@ -5,8 +5,9 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public class CorpBO {
 
 	@JsonProperty("ID")
-	private String id;
-	private String name;
+	private String ID;
+//	@JsonProperty("corpName")
+	private String corpName;
 	private String size;
 	private String type;
 	private String domain;
@@ -15,20 +16,32 @@ public class CorpBO {
 	private String url;
 	private String tel;
 	private String contactName;
+	public String getID() {
+		return ID;
+	}
+	public void setID(String ID) {
+		this.ID = ID;
+	}
+	public String getCorpName() {
+		return corpName;
+	}
+	public void setCorpName(String corpName) {
+		this.corpName = corpName;
+	}
 	private String phone;
 	private String status;
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
+//	public String getId() {
+//		return id;
+//	}
+//	public void setId(String id) {
+//		this.id = id;
+//	}
+//	public String getName() {
+//		return name;
+//	}
+//	public void setName(String name) {
+//		this.name = name;
+//	}
 	public String getSize() {
 		return size;
 	}

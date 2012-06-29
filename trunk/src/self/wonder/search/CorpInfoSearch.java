@@ -72,8 +72,8 @@ public class CorpInfoSearch extends HttpServlet {
 			sbpo.setLimit(pagersize);
 			
 			//WonderSearchBasePO中增加定制查询指定字段信息属性searchFileds
-			String[] searchFields = {"name","size","type"};
-			sbpo.setSearchFields(searchFields);
+//			String[] searchFields = {"corpName","size","type"};
+//			sbpo.setSearchFields(searchFields);
 			
 			Date start = new Date();
 			DataGrid<List<CorpBO>> dataGrid = getDataKeyAnalysis(new CorpBO(), sbpo);
@@ -86,7 +86,7 @@ public class CorpInfoSearch extends HttpServlet {
 			System.out.println("查询:" + searchtimes + "秒");
 			request.setAttribute("searchTimes", searchtimes);
 			request.setAttribute("corpSearchKey", corpSearchKey);
-			request.setAttribute("dataGrid", dataGrid);
+//			request.setAttribute("dataGrid", dataGrid);
 			request.setAttribute("totalRecord", dataGrid.getTotalElements());
 			request.setAttribute("currBeginRecord", offset+1);
 			request.setAttribute("currEndRecord", offset+pagersize);

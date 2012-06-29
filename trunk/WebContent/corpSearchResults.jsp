@@ -103,7 +103,7 @@
 	<TABLE id=2 border=0 cellSpacing=0 cellPadding=0>
 		<TBODY>
 			<TR>
-				<TD class=f><FONT size=3><%=post.getID()%>&nbsp;&nbsp;&nbsp;<%=corp.getName()%></FONT>
+				<TD class=f><FONT size=3><%=corp.getID()%>&nbsp;&nbsp;&nbsp;<%=corp.getCorpName()%></FONT>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<FONT size=-1><%=corp.getType()%></FONT>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<FONT size=-1><%=corp.getDomain()%></FONT><BR>
 						<FONT color=#008000 size=-1> 
@@ -170,12 +170,12 @@
 	<DIV class=p>
 		<pg:pager url="./CorpInfoSearch" items="${totalRecord}"
 			export="currentPageNumber=pageNumber" maxPageItems="10">
-			<pg:param name="qc" value="<%=searchKey %>" />
+			<pg:param name="qc" value="<%=corpSearchKey %>" />
 			<pg:first>
-				<a href="${pageUrl}"> < </a>
+				<a href="${pageUrl}"> 首页 </a>
 			</pg:first>
 			<pg:prev>
-				<a href="${pageUrl }"> << </a>
+				<a href="${pageUrl }"> 上一页 </a>
 			</pg:prev>
 			<pg:pages>
 				<c:choose>
@@ -188,10 +188,10 @@
 				</c:choose>
 			</pg:pages>
 			<pg:next>
-				<a href="${pageUrl }"> > </a>
+				<a href="${pageUrl }"> 下一页 </a>
 			</pg:next>
 			<pg:last>
-				<a href="${pageUrl }"> >> </a>
+				<a href="${pageUrl }"> 尾页 </a>
 			</pg:last>
 		</pg:pager>
 	</DIV>
