@@ -209,7 +209,7 @@ public class MultiIndexer implements IInderer
      */
     public Directory getDirectoryThree() throws Exception
     {
-        return FSDirectory.open(new File(m_strPath2));
+        return FSDirectory.open(new File(m_strPath3));
     }
     
     /*
@@ -350,14 +350,16 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
 //    	  Directory directoryTwo = getDirectoryTwo();
 //    	  Directory directoryThree = getDirectoryThree();
 //    	  //创建两个IndexSearcher，以实现在多个索引目录进行查询
-//    	  IndexSearcher searcherOne = new IndexSearcher(directoryOne, true);
-//    	  IndexSearcher searcherTwo = new IndexSearcher(directoryTwo, true);
-//    	  IndexSearcher searcherThree = new IndexSearcher(directoryThree, true);
-//    	  IndexSearcher[] searchers = { searcherOne, searcherTwo, searcherThree };
-    	  IndexSearcher[] searchers = new IndexSearcher[Integer.valueOf(cm.getPropValue(IndexConstant.CORP_INDEX_NUM))];
-    	  for (int i = 1; i <= searchers.length; i++) {
-    		  searchers[i]=new IndexSearcher(FSDirectory.open(new File(m_strPath+i)), true);
-		  }
+    	  IndexSearcher searcherOne = new IndexSearcher(FSDirectory.open(new File(cm.getPropValue(IndexConstant.CORP_PATH_ONE))), true);
+    	  IndexSearcher searcherTwo = new IndexSearcher(FSDirectory.open(new File(cm.getPropValue(IndexConstant.CORP_PATH_TWO))), true);
+    	  IndexSearcher searcherThree = new IndexSearcher(FSDirectory.open(new File(cm.getPropValue(IndexConstant.CORP_PATH_THREE))), true);
+    	  IndexSearcher[] searchers = { searcherOne, searcherTwo, searcherThree };
+//    	  IndexSearcher[] searchers = new IndexSearcher[Integer.valueOf(cm.getPropValue(IndexConstant.CORP_INDEX_NUM))];
+//    	  for (int i = 1; i <= searchers.length; i++) {
+//    		  System.out.println(m_strPath+i);
+//    		  System.out.println("m_strPath"+i);
+//    		  searchers[i]=new IndexSearcher(FSDirectory.open(new File(cm.getPropValue(IndexConstant.CORP_PATH1))), true);
+//		  }
           //使用MultiSearcher进行多域搜索
           searcher = new MultiSearcher(searchers);
           // 给定义的字段设置排序
@@ -373,7 +375,7 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
               if (scoreDocs.length > 0)
 	          {
 	              Document document = searcher.doc(scoreDocs[0].doc);
-	              // 获取需要查询的属性
+	              // 获取需要查询的属性，这就要求bean中得属性要与索引中的字段名称完全对应
 	              MapFieldSelector mapFieldSelector = getSearchFields(sbpo.getSearchFields(),clazzT);
 	              for (int i = sbpo.getOffset(); i < scoreDocs.length; i++)
 	              {
