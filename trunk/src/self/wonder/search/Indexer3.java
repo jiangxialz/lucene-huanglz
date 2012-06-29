@@ -8,10 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -305,22 +303,12 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
           Class clazzT = object.getClass();
           if (query == null)
               query = new MatchAllDocsQuery();
+          
               // 对索引中的字段进行查询
-          
-          	Date start00 = new Date();
-          
 	          TopDocs topDocs = searcher.search(query, null, sbpo.getOffset() + sbpo.getLimit(), sort);
-	          
-	          Date end00 = new Date();
-	          long counttimes00 = end00.getTime() - start00.getTime();
-			  DecimalFormat df00 = new DecimalFormat("0.00000");
-			  double miao00 = Double.parseDouble((counttimes00 / 1300.0) + "");
-			  String searchtimes00 = df00.format(miao00);
-			  System.out.println("search耗时:" + searchtimes00 + "秒");
 	          
 	          dataGrid.setTotalElements(topDocs.totalHits);
 	          ScoreDoc[] scoreDocs = topDocs.scoreDocs;
-	          // limit == scoreDocs.length; 
 	          // 如果有多个分词，当前面的分词查询结果总数大于分页中每页显示的数目时，只需获取结果集数目，不需要获取结果集
 	          if (resultList.size() >= sbpo.getLimit()) {
 				  return dataGrid;
@@ -328,21 +316,10 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
 	          else if (scoreDocs.length > 0)
 	          {
 	              Document document = searcher.doc(scoreDocs[0].doc);
-//	              java.text.NumberFormat format = java.text.NumberFormat.getNumberInstance();  
 	              // 获取需要查询的属性
-	              Date start = new Date();
 	              MapFieldSelector mapFieldSelector = getSearchFields(sbpo.getSearchFields(),clazzT);
-	              Date end = new Date();
-	              long counttimes = end.getTime() - start.getTime();
-	  			  DecimalFormat df = new DecimalFormat("0.00000");
-	  			  double miao = Double.parseDouble((counttimes / 1300.0) + "");
-	  			  String searchtimes = df.format(miao);
-	  			  System.out.println("查询getSearchFields:" + searchtimes + "秒");
-	  			  
-	  			   Date start22 = new Date();
 	              for (int i = sbpo.getOffset(); i < scoreDocs.length; i++)
 	              {
-//	            	  System.out.println("准确度为：" + format.format(scoreDocs[i].score * 100.0) + "%");
 	            	  // 获取document文档信息
 //	                  document = searcher.doc(scoreDocs[i].doc);
 	                  document = searcher.doc(scoreDocs[i].doc, mapFieldSelector);
@@ -351,18 +328,11 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
 	                  for (Fieldable fieldable : document.getFields())
 	                  {
 	                	  String strField = fieldable.name();
-	                	  jsonObject.put(strField, document.get(strField));
+	                	  jsonObject.put(strField, this.replace(document.get(strField),String.valueOf(sbpo.getParam("key"))));
 	                  }
 	                  o = jsonToVO(o, jsonObject.toString());
 	                  beanList.add(o);
 	              }
-	              Date end22 = new Date();
-	              long counttimes22 = end22.getTime() - start22.getTime();
-	  			  DecimalFormat df22 = new DecimalFormat("0.00000");
-	  			  double miao22 = Double.parseDouble((counttimes22 / 1300.0) + "");
-	  			  String searchtimes22 = df22.format(miao22);
-	  			  System.out.println("循环结果集耗时:" + searchtimes22 + "秒");
-	             
 	          }
       }
       catch (Exception e)
@@ -386,6 +356,19 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
       dataGrid.setData(beanList);
       return dataGrid;
   }
+  
+	/**
+	 * 将标题中包含的关键字设置为高亮
+	 * @param title
+	 * @param keyword
+	 * @return string
+	 */
+	public String replace(String field, String keyword) {
+		if (StringHelper.isNotNullAndEmpty(field)) {
+			return field.replaceAll(keyword, "<EM>" + keyword + "</EM>");
+		}
+		return field;
+	};
   
   /**
    * <获取查询的属性>
