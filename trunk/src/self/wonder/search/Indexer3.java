@@ -328,7 +328,12 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
 	                  for (Fieldable fieldable : document.getFields())
 	                  {
 	                	  String strField = fieldable.name();
-	                	  jsonObject.put(strField, this.replace(document.get(strField),String.valueOf(sbpo.getParam("key"))));
+	                	  if ("name".equals(strField)) {
+	                		  jsonObject.put(strField, this.replace(document.get(strField),sbpo));
+//	                		  jsonObject.put(strField, this.replace2(document.get(strField),String.valueOf(sbpo.getParam("key"))));
+						  }else {
+							  jsonObject.put(strField, document.get(strField));
+						  }
 	                  }
 	                  o = jsonToVO(o, jsonObject.toString());
 	                  beanList.add(o);
@@ -363,13 +368,20 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
 	 * @param keyword
 	 * @return string
 	 */
-	public String replace(String field, String keyword) {
-		if (StringHelper.isNotNullAndEmpty(field)) {
-			return field.replaceAll(keyword, "<EM>" + keyword + "</EM>");
+	public String replace(String fieldValue, WonderSearchBasePO sbpo) {
+		ArrayList<String> keyWordList = KeyAnalysisSupport.getAnalyseKeyWord(sbpo);
+		for (String keyword : keyWordList) {
+			if (StringHelper.isNotNullAndEmpty(fieldValue)) {
+				if (fieldValue.indexOf("EM")>=0) {
+					break;
+				}else if (fieldValue.indexOf(keyword) >= 0) {
+					fieldValue = fieldValue.replaceAll(keyword, "<EM>" + keyword + "</EM>");
+				}
+			}
 		}
-		return field;
+		return fieldValue;
 	};
-  
+	
   /**
    * <获取查询的属性>
    * <功能详细描述>
