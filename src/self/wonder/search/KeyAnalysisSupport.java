@@ -17,14 +17,7 @@ import com.util.StrLengthComparator;
 
 public class KeyAnalysisSupport {
 	
-	/**
-	 * <查询条件分析 分词及封装>
-	 * 
-	 * @param sbpo
-	 */
-	@SuppressWarnings("rawtypes")
-	public static ArrayList<String> analysePostSearchKey(WonderSearchBasePO sbpo) {
-		
+	public static ArrayList<String> getAnalyseKeyWord(WonderSearchBasePO sbpo){
 		// 搜索关键字
 		String keyString = (String) sbpo.getParam("key");
 		DictionaryAnalyzer mainsegmenter = null;
@@ -46,6 +39,18 @@ public class KeyAnalysisSupport {
 			Comparator<String> comp = new StrLengthComparator();
 			Collections.sort(keywords, comp);
 		}
+		return keywords;
+	}
+	
+	/**
+	 * <查询条件分析 分词及封装>
+	 * 
+	 * @param sbpo
+	 */
+	@SuppressWarnings("rawtypes")
+	public static ArrayList<String> analysePostSearchKey(WonderSearchBasePO sbpo) {
+		// 获取分词关键字并排序
+		ArrayList<String> keywords = getAnalyseKeyWord(sbpo);
 		// 取出其他查询条件
 		StringBuffer sb = new StringBuffer();
 		Iterator it = sbpo.getParamMap().keySet().iterator();

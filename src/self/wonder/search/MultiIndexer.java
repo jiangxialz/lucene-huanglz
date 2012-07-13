@@ -465,6 +465,34 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
    */
   public  MapFieldSelector getSearchFields(String[] searchFields, Class clazz){
       MapFieldSelector mapFieldSelector = null;
+	  // 如果设置了要查询的属性则返回要查询的,否则返回整个bean对象包含的属性
+	  if (StringHelper.isNullOrEmpty(searchFields)) {
+		  List<String> list = new ArrayList<String>();
+		  // 获取实体类的所有属性，返回Field数组
+		  java.lang.reflect.Field[] field = clazz.getDeclaredFields();
+		  for (int i = 0; i < field.length; i++) { // 遍历所有属性
+			  list.add(field[i].getName());// 获取属性的名字
+		  }
+		  mapFieldSelector = new MapFieldSelector(list);
+	  }else {
+		  mapFieldSelector = new MapFieldSelector(searchFields);
+	  }
+	  return mapFieldSelector;
+  }
+  
+  /**
+   * <获取查询的属性>
+   * <功能详细描述>
+   * @param searchFields
+   * @param clazz
+   * @return [参数说明]
+   * 
+   * @return MapFieldSelector [返回类型说明]
+   * @exception throws [违例类型] [违例说明]
+   * @see [类、类#方法、类#成员]
+   */
+  public  MapFieldSelector getSearchFields2(String[] searchFields, Class clazz){
+      MapFieldSelector mapFieldSelector = null;
 	  try {
 		  // 如果设置了要查询的属性则返回要查询的,否则返回整个bean对象包含的属性
 		  if (StringHelper.isNullOrEmpty(searchFields)) {
