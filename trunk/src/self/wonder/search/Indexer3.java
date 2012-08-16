@@ -373,9 +373,12 @@ public <T> DataGrid<List<T>> search(T object, Query query, WonderSearchBasePO sb
 		for (String keyword : keyWordList) {
 			if (StringHelper.isNotNullAndEmpty(fieldValue)) {
 				if (fieldValue.indexOf("EM")>=0) {
+//					if (fieldValue.indexOf("font")>=0) {
 					break;
 				}else if (fieldValue.indexOf(keyword) >= 0) {
+					// 给关键字标红
 					fieldValue = fieldValue.replaceAll(keyword, "<EM>" + keyword + "</EM>");
+//					fieldValue = fieldValue.replaceAll(keyword, "<font color=\"red\">" + keyword + "</font>");
 				}
 			}
 		}
